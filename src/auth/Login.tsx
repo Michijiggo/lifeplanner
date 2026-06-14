@@ -3,14 +3,16 @@ import { useAuth } from "./AuthProvider";
 
 export default function Login() {
   const { register, login, lastEmail } = useAuth();
-  // Wenn schon einmal registriert wurde, direkt in den PIN-Login starten.
-  const [mode, setMode] = useState<"login" | "register">(
-    lastEmail ? "login" : "register"
-  );
+  // Standard: Anmeldemaske. Registrieren erreicht man per Klick darunter.
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState(lastEmail ?? "");
+  // E-Mail-Feld nur ausblenden, wenn wir im Login sind UND eine E-Mail kennen.
+  const [editEmail, setEditEmail] = useState(!lastEmail);
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const showEmailField = mode === "register" || editEmail || !email;
 
   function pressDigit(d: string) {
     setError(null);
@@ -21,12 +23,13 @@ export default function Login() {
   }
 
   async function submit() {
-    if (pin.length !== 4) {
-      setError("Bitte 4 Ziffern eingeben.");
+    if (!email.includes("@")) {
+      setError("Bitte eine gültige E-Mail eingeben.");
+      setEditEmail(true);
       return;
     }
-    if (mode === "register" && !email.includes("@")) {
-      setError("Bitte eine gültige E-Mail eingeben.");
+    if (pin.length !== 4) {
+      setError("Bitte 4 Ziffern eingeben.");
       return;
     }
     setBusy(true);
@@ -68,7 +71,7 @@ export default function Login() {
             : "Mit deinem PIN anmelden."}
         </p>
 
-        {mode === "register" && (
+        {showEmailField ? (
           <input
             className="login-email"
             type="email"
@@ -78,11 +81,16 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        )}
-
-        {mode === "login" && email && (
+        ) : (
           <div className="login-asemail">
             angemeldet als <strong>{email}</strong>
+            <button
+              type="button"
+              className="login-change"
+              onClick={() => setEditEmail(true)}
+            >
+              ändern
+            </button>
           </div>
         )}
 
@@ -118,14 +126,18 @@ export default function Login() {
         <button
           className="login-switch"
           onClick={() => {
-            setMode((m) => (m === "register" ? "login" : "register"));
+            const next = mode === "register" ? "login" : "register";
+            setMode(next);
             setPin("");
             setError(null);
+            // Beim Wechsel zum Registrieren E-Mail-Feld einblenden.
+            if (next === "register") setEditEmail(true);
+            else setEditEmail(!lastEmail);
           }}
         >
           {mode === "register"
             ? "Schon registriert? Anmelden"
-            : "Neuen Account anlegen"}
+            : "Noch kein Account? Registrieren"}
         </button>
       </div>
     </div>

@@ -604,6 +604,14 @@ textarea {
   color: var(--muted);
   margin-bottom: 14px;
 }
+.login-change {
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 13px;
+  margin-left: 6px;
+  padding: 2px 4px;
+}
 .pin-dots {
   display: flex;
   justify-content: center;
