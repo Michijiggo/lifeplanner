@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { UNCATEGORIZED, type Category, type Dish, type DishIngredient } from "../lib/types";
+import { parseIngredientLine } from "../data/categorize";
 
 type Props = {
   dishId: string;
@@ -12,10 +13,10 @@ type Props = {
 export default function DishEditor({ dishId, categories, onClose, onAddToList }: Props) {
   const [dish, setDish] = useState<Dish | null>(null);
   const [ings, setIngs] = useState<DishIngredient[]>([]);
-  const [newName, setNewName] = useState("");
-  const [newQty, setNewQty] = useState("");
-  const [newUnit, setNewUnit] = useState("");
-  const [newCat, setNewCat] = useState<number>(UNCATEGORIZED);
+  const [quick, setQuick] = useState("");
+  const [bulk, setBulk] = useState("");
+  const [showBulk, setShowBulk] = useState(false);
+  const quickRef = useRef<HTMLInputElement>(null);
 
   async function reload() {
     const [{ data: d }, { data: i }] = await Promise.all([
@@ -35,31 +36,51 @@ export default function DishEditor({ dishId, categories, onClose, onAddToList }:
     await supabase.from("dishes").update(patch).eq("id", dishId);
   }
 
-  async function addIngredient(e: React.FormEvent) {
-    e.preventDefault();
-    const name = newName.trim();
-    if (!name) return;
-    const qty = newQty.trim() ? Number(newQty.replace(",", ".")) : null;
-    const { data, error } = await supabase
-      .from("dish_ingredients")
-      .insert({
-        dish_id: dishId,
-        name,
-        quantity: Number.isFinite(qty as number) ? qty : null,
-        unit: newUnit.trim() || null,
-        category_id: newCat,
-        sort_order: ings.length,
-      })
-      .select()
-      .single();
+  // Mehrere Zeilen auf einmal einfügen und parsen.
+  async function addLines(text: string) {
+    const lines = text
+      .split("\n")
+      .map((l) => parseIngredientLine(l))
+      .filter((p): p is NonNullable<typeof p> => p !== null);
+    if (lines.length === 0) return 0;
+
+    const base = ings.length;
+    const rows = lines.map((p, idx) => ({
+      dish_id: dishId,
+      name: p.name,
+      quantity: p.quantity,
+      unit: p.unit,
+      category_id: p.category_id,
+      sort_order: base + idx,
+    }));
+    const { data, error } = await supabase.from("dish_ingredients").insert(rows).select();
     if (error) {
       alert(error.message);
-      return;
+      return 0;
     }
-    setIngs((prev) => [...prev, data as DishIngredient]);
-    setNewName("");
-    setNewQty("");
-    setNewUnit("");
+    setIngs((prev) => [...prev, ...((data as DishIngredient[]) ?? [])]);
+    return lines.length;
+  }
+
+  async function addQuick(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quick.trim()) return;
+    await addLines(quick);
+    setQuick("");
+    quickRef.current?.focus();
+  }
+
+  async function addBulk() {
+    const n = await addLines(bulk);
+    if (n > 0) {
+      setBulk("");
+      setShowBulk(false);
+    }
+  }
+
+  async function setIngredientCategory(id: string, category_id: number) {
+    setIngs((prev) => prev.map((i) => (i.id === id ? { ...i, category_id } : i)));
+    await supabase.from("dish_ingredients").update({ category_id }).eq("id", id);
   }
 
   async function removeIngredient(id: string) {
@@ -138,62 +159,75 @@ export default function DishEditor({ dishId, categories, onClose, onAddToList }:
       />
 
       <h3 className="section-title">Zutaten</h3>
-      <ul className="items">
-        {ings.map((i) => {
-          const cat = categories.find((c) => c.id === (i.category_id ?? UNCATEGORIZED));
-          return (
-            <li key={i.id} className="item">
-              <span className="ing-cat">{cat?.emoji ?? "🛒"}</span>
-              <span className="item-name">
-                {i.name}
-                {(i.quantity || i.unit) && (
-                  <span className="item-qty">
-                    {" "}
-                    {i.quantity ?? ""} {i.unit ?? ""}
-                  </span>
-                )}
-              </span>
-              <button className="item-del" onClick={() => removeIngredient(i.id)}>
-                ✕
-              </button>
-            </li>
-          );
-        })}
-      </ul>
 
-      <form className="add-bar" onSubmit={addIngredient}>
+      {/* Schnelle Einzel-Eingabe mit Auto-Erkennung */}
+      <form className="quick-add" onSubmit={addQuick}>
         <input
-          className="add-name"
-          placeholder="Zutat hinzufügen…"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
+          ref={quickRef}
+          className="quick-input"
+          placeholder="z. B. 500 g Mehl, 2 Eier, Salz…"
+          value={quick}
+          onChange={(e) => setQuick(e.target.value)}
         />
-        <div className="add-meta">
-          <input
-            className="add-qty"
-            placeholder="Menge"
-            inputMode="decimal"
-            value={newQty}
-            onChange={(e) => setNewQty(e.target.value)}
-          />
-          <input
-            className="add-unit"
-            placeholder="Einheit"
-            value={newUnit}
-            onChange={(e) => setNewUnit(e.target.value)}
-          />
-          <select value={newCat} onChange={(e) => setNewCat(Number(e.target.value))}>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.emoji} {c.name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="add-btn">
-            +
-          </button>
-        </div>
+        <button type="submit" className="add-btn">
+          +
+        </button>
       </form>
+
+      {/* Sammel-Eingabe: ganze Liste auf einmal */}
+      {!showBulk ? (
+        <button className="bulk-toggle" onClick={() => setShowBulk(true)}>
+          📋 Ganze Liste einfügen
+        </button>
+      ) : (
+        <div className="bulk-box">
+          <textarea
+            className="bulk-text"
+            autoFocus
+            placeholder={"Eine Zutat pro Zeile, z. B.:\n500 g Mehl\n2 Eier\n1 Pck. Trockenhefe\nSalz"}
+            value={bulk}
+            onChange={(e) => setBulk(e.target.value)}
+          />
+          <div className="bulk-actions">
+            <button className="sheet-close" onClick={() => setShowBulk(false)}>
+              Abbrechen
+            </button>
+            <button className="add-btn-wide" onClick={addBulk}>
+              Alle hinzufügen
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ul className="items">
+        {ings.map((i) => (
+          <li key={i.id} className="item ing-row">
+            <select
+              className="ing-cat-select"
+              value={i.category_id ?? UNCATEGORIZED}
+              onChange={(e) => setIngredientCategory(i.id, Number(e.target.value))}
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.emoji}
+                </option>
+              ))}
+            </select>
+            <span className="item-name">
+              {i.name}
+              {(i.quantity || i.unit) && (
+                <span className="item-qty">
+                  {" "}
+                  {i.quantity ?? ""} {i.unit ?? ""}
+                </span>
+              )}
+            </span>
+            <button className="item-del" onClick={() => removeIngredient(i.id)}>
+              ✕
+            </button>
+          </li>
+        ))}
+      </ul>
 
       <button className="big-btn" onClick={addAllToList} disabled={ings.length === 0}>
         🛒 Alle Zutaten auf die Einkaufsliste

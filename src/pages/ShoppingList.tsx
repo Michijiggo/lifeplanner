@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Category, type ShoppingItem } from "../lib/types";
+import { parseIngredientLine } from "../data/categorize";
 
 export default function ShoppingList() {
   const categories = useCategories();
@@ -80,13 +81,23 @@ export default function ShoppingList() {
     e.preventDefault();
     const name = newName.trim();
     if (!name) return;
-    const qty = newQty.trim() ? Number(newQty.replace(",", ".")) : null;
+    const typedQty = newQty.trim() ? Number(newQty.replace(",", ".")) : null;
+
+    // Name automatisch zerlegen ("500 g Mehl") und Kategorie erkennen.
+    const parsed = parseIngredientLine(name);
+    const quantity =
+      typedQty != null && Number.isFinite(typedQty) ? typedQty : parsed?.quantity ?? null;
+    const unit = newUnit.trim() || parsed?.unit || null;
+    // Kategorie nur automatisch, wenn der Nutzer keine eigene gewählt hat.
+    const category_id =
+      newCat !== UNCATEGORIZED ? newCat : parsed?.category_id ?? UNCATEGORIZED;
+
     const optimistic: ShoppingItem = {
       id: crypto.randomUUID(),
-      name,
-      quantity: Number.isFinite(qty as number) ? (qty as number) : null,
-      unit: newUnit.trim() || null,
-      category_id: newCat,
+      name: parsed?.name || name,
+      quantity,
+      unit,
+      category_id,
       checked: false,
       checked_at: null,
       source_dish_id: null,
@@ -96,6 +107,7 @@ export default function ShoppingList() {
     setNewName("");
     setNewQty("");
     setNewUnit("");
+    setNewCat(UNCATEGORIZED);
     const { error } = await supabase.from("shopping_items").insert({
       id: optimistic.id,
       name: optimistic.name,
