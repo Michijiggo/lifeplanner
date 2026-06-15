@@ -58,3 +58,10 @@ export type DishListItem = {
 };
 
 export const UNCATEGORIZED = 12; // "Sonstiges"
+
+export type LaundryKind = "washer" | "dryer";
+export type LaundryTimer = {
+  kind: LaundryKind;
+  finish_at: string | null;
+  updated_at: string;
+};
