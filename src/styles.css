@@ -804,7 +804,8 @@ textarea {
   margin: 0 auto;
   border-radius: 18px 18px 0 0;
   padding: 18px 18px calc(18px + var(--safe-bottom));
-  max-height: 70vh;
+  max-height: 85vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -813,6 +814,9 @@ textarea {
 }
 .sheet-list {
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
