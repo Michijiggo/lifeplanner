@@ -842,13 +842,25 @@ textarea {
 }
 .item-del,
 .ing-edit-btn {
-  width: 42px;
-  height: 42px;
-  font-size: 18px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  font-size: 17px;
+  border-radius: 50%;
   padding: 0;
+  border: none;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+}
+/* Bearbeiten: gut sichtbarer, antippbarer Knopf */
+.ing-edit-btn {
+  background: #eaf7ee;
+  color: var(--green-dark);
+}
+/* Löschen: dezent rot */
+.item-del {
+  background: #f6eceb;
+  color: var(--danger);
 }
 .fav {
   width: 42px;
