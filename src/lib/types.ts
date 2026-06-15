@@ -59,6 +59,23 @@ export type DishListItem = {
 
 export const UNCATEGORIZED = 12; // "Sonstiges"
 
+export type FinanceSettings = {
+  id: 1;
+  income_p1: number;
+  income_p2: number;
+  shopping_budget: number;
+  savings_budget: number;
+  goal1_name: string;
+  goal1_amount: number;
+  goal2_name: string;
+  goal2_amount: number;
+  goal3_name: string;
+  goal3_amount: number;
+  leftover_p1: number;
+  leftover_p2: number;
+  updated_at: string;
+};
+
 export type FixedCost = {
   id: string;
   person: 1 | 2;
