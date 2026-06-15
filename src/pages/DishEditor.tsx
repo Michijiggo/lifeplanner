@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { UNCATEGORIZED, type Category, type Dish, type DishIngredient } from "../lib/types";
 import { parseIngredientLine } from "../data/categorize";
+import { useShopping } from "../shopping/ShoppingProvider";
 
 type Props = {
   dishId: string;
   categories: Category[];
   onClose: () => void;
-  onAddToList: (dishName: string, count: number) => void;
 };
 
-export default function DishEditor({ dishId, categories, onClose, onAddToList }: Props) {
+export default function DishEditor({ dishId, categories, onClose }: Props) {
+  const { addToShopping } = useShopping();
   const [dish, setDish] = useState<Dish | null>(null);
   const [ings, setIngs] = useState<DishIngredient[]>([]);
   const [quick, setQuick] = useState("");
@@ -107,19 +108,15 @@ export default function DishEditor({ dishId, categories, onClose, onAddToList }:
 
   async function addAllToList() {
     if (!dish || ings.length === 0) return;
-    const rows = ings.map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit,
-      category_id: i.category_id ?? UNCATEGORIZED,
-      source_dish_id: dishId,
-    }));
-    const { error } = await supabase.from("shopping_items").insert(rows);
-    if (error) {
-      alert(error.message);
-      return;
-    }
-    onAddToList(dish.name, ings.length);
+    await addToShopping(
+      ings.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        category_id: i.category_id ?? UNCATEGORIZED,
+        source_dish_id: dishId,
+      }))
+    );
   }
 
   if (!dish) return <div className="page">Lädt…</div>;

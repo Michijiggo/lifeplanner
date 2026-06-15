@@ -3,11 +3,13 @@ import { supabase } from "../lib/supabase";
 import { useCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Dish, type DishIngredient } from "../lib/types";
 import { parseIngredientLine, parseRecipes } from "../data/categorize";
+import { useShopping } from "../shopping/ShoppingProvider";
 import DishEditor from "./DishEditor";
 
 export default function Dishes() {
   const categories = useCategories();
   const [dishes, setDishes] = useState<Dish[]>([]);
+  const { addToShopping } = useShopping();
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -113,19 +115,15 @@ export default function Dishes() {
       flash(`"${d.name}" hat noch keine Zutaten.`);
       return;
     }
-    const rows = list.map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit,
-      category_id: i.category_id ?? UNCATEGORIZED,
-      source_dish_id: d.id,
-    }));
-    const { error } = await supabase.from("shopping_items").insert(rows);
-    if (error) {
-      alert(error.message);
-      return;
-    }
-    flash(`✅ ${list.length} Zutaten von "${d.name}" auf die Liste gesetzt`);
+    await addToShopping(
+      list.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        category_id: i.category_id ?? UNCATEGORIZED,
+        source_dish_id: d.id,
+      }))
+    );
   }
 
   if (openId) {
@@ -137,9 +135,6 @@ export default function Dishes() {
           setOpenId(null);
           reload();
         }}
-        onAddToList={(name, count) =>
-          flash(`✅ ${count} Zutaten von "${name}" auf die Liste gesetzt`)
-        }
       />
     );
   }

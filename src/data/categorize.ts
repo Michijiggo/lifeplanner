@@ -85,6 +85,22 @@ export function detectCategory(name: string): number {
   return UNCATEGORIZED;
 }
 
+// Grundzutaten / Vorrat, die man meist zuhause hat. Bei diesen wird vor dem
+// Hinzufügen zur Einkaufsliste nachgefragt, ob sie noch vorhanden sind.
+const STAPLES = [
+  "salz", "pfeffer", "zucker", "mehl", "öl", "essig", "reis", "nudel",
+  "spaghetti", "pasta", "zwiebel", "knoblauch", "gewürz", "paprikapulver",
+  "curry", "oregano", "thymian", "zimt", "vanille", "backpulver", "hefe",
+  "senf", "ketchup", "majo", "mayo", "sojasoße", "sojasauce", "brühe",
+  "honig", "stärke", "haferflocken", "müsli", "couscous", "bulgur",
+  "tomatenmark", "kokosmilch", "linsen", "essiggurke",
+];
+
+export function isStaple(name: string): boolean {
+  const n = name.toLowerCase();
+  return STAPLES.some((s) => n.includes(s));
+}
+
 export type ParsedIngredient = {
   name: string;
   quantity: number | null;

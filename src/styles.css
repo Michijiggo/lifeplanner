@@ -667,6 +667,42 @@ textarea {
   padding: 10px;
 }
 
+/* ---------- Vorrats-Abfrage ---------- */
+.staple-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 16px;
+}
+.staple-row.buy {
+  background: #eaf7ee;
+  border-color: var(--green);
+}
+.staple-state {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+.staple-row.buy .staple-state {
+  color: var(--green-dark);
+}
+.staple-allbuy {
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 13px;
+  padding: 8px 0 2px;
+  align-self: flex-start;
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;

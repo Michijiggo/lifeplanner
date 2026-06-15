@@ -7,6 +7,7 @@ import {
   type DishList,
 } from "../lib/types";
 import { useCategories } from "../data/useCategories";
+import { useShopping } from "../shopping/ShoppingProvider";
 import DishEditor from "./DishEditor";
 
 type ListWithCount = DishList & { count: number };
@@ -119,6 +120,7 @@ function DishListDetail({
   const [picker, setPicker] = useState(false);
   const [openDishId, setOpenDishId] = useState<string | null>(null);
   const categories = useCategories();
+  const { addToShopping } = useShopping();
 
   async function reload() {
     const [{ data: l }, { data: items }, { data: dishes }] = await Promise.all([
@@ -188,19 +190,15 @@ function DishListDetail({
       onFlash("Die Gerichte haben keine Zutaten.");
       return;
     }
-    const rows = ings.map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit,
-      category_id: i.category_id ?? UNCATEGORIZED,
-      source_dish_id: i.dish_id,
-    }));
-    const { error } = await supabase.from("shopping_items").insert(rows);
-    if (error) {
-      alert(error.message);
-      return;
-    }
-    onFlash(`✅ ${ings.length} Zutaten auf die Einkaufsliste gesetzt`);
+    await addToShopping(
+      ings.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        category_id: i.category_id ?? UNCATEGORIZED,
+        source_dish_id: i.dish_id,
+      }))
+    );
   }
 
   if (openDishId) {
@@ -212,9 +210,6 @@ function DishListDetail({
           setOpenDishId(null);
           reload();
         }}
-        onAddToList={(name, count) =>
-          onFlash(`✅ ${count} Zutaten von "${name}" auf die Liste gesetzt`)
-        }
       />
     );
   }

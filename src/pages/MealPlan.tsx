@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { UNCATEGORIZED, type Dish, type DishIngredient, type MealPlanEntry } from "../lib/types";
+import { useShopping } from "../shopping/ShoppingProvider";
 
 const DAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -25,6 +26,7 @@ function addDays(d: Date, n: number): Date {
 type EntryWithDish = MealPlanEntry & { dish: Dish | null };
 
 export default function MealPlan() {
+  const { addToShopping } = useShopping();
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
   const [entries, setEntries] = useState<EntryWithDish[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
@@ -98,19 +100,15 @@ export default function MealPlan() {
       flash("Die geplanten Gerichte haben keine Zutaten.");
       return;
     }
-    const rows = list.map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit,
-      category_id: i.category_id ?? UNCATEGORIZED,
-      source_dish_id: i.dish_id,
-    }));
-    const { error } = await supabase.from("shopping_items").insert(rows);
-    if (error) {
-      alert(error.message);
-      return;
-    }
-    flash(`✅ ${list.length} Zutaten der Woche auf die Liste gesetzt`);
+    await addToShopping(
+      list.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        category_id: i.category_id ?? UNCATEGORIZED,
+        source_dish_id: i.dish_id,
+      }))
+    );
   }
 
   const monthLabel = `${weekStart.toLocaleDateString("de-DE", {
