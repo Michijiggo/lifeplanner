@@ -338,6 +338,11 @@ textarea {
   font-weight: 600;
   font-size: 14px;
 }
+.chev {
+  color: var(--muted);
+  font-size: 24px;
+  padding-left: 8px;
+}
 
 /* ---------- Editor ---------- */
 .editor-head {

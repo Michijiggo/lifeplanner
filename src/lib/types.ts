@@ -44,4 +44,17 @@ export type MealPlanEntry = {
   created_at: string;
 };
 
+export type DishList = {
+  id: string;
+  name: string;
+  created_at: string;
+};
+
+export type DishListItem = {
+  id: string;
+  list_id: string;
+  dish_id: string;
+  created_at: string;
+};
+
 export const UNCATEGORIZED = 12; // "Sonstiges"

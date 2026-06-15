@@ -3,9 +3,10 @@ import { useAuth } from "./auth/AuthProvider";
 import Login from "./auth/Login";
 import ShoppingList from "./pages/ShoppingList";
 import Dishes from "./pages/Dishes";
+import DishLists from "./pages/DishLists";
 import MealPlan from "./pages/MealPlan";
 
-type Tab = "list" | "dishes" | "plan";
+type Tab = "list" | "dishes" | "lists" | "plan";
 
 export default function App() {
   const { session, loading, logout } = useAuth();
@@ -22,6 +23,7 @@ export default function App() {
   const titles: Record<Tab, string> = {
     list: "Einkaufsliste",
     dishes: "Gerichte",
+    lists: "Listen",
     plan: "Wochenplan",
   };
 
@@ -37,6 +39,7 @@ export default function App() {
       <main className="content">
         {tab === "list" && <ShoppingList />}
         {tab === "dishes" && <Dishes />}
+        {tab === "lists" && <DishLists />}
         {tab === "plan" && <MealPlan />}
       </main>
 
@@ -48,6 +51,10 @@ export default function App() {
         <button className={tab === "dishes" ? "active" : ""} onClick={() => setTab("dishes")}>
           <span className="tab-ico">🍲</span>
           Gerichte
+        </button>
+        <button className={tab === "lists" ? "active" : ""} onClick={() => setTab("lists")}>
+          <span className="tab-ico">📑</span>
+          Listen
         </button>
         <button className={tab === "plan" ? "active" : ""} onClick={() => setTab("plan")}>
           <span className="tab-ico">📅</span>
