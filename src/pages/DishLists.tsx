@@ -6,6 +6,8 @@ import {
   type DishIngredient,
   type DishList,
 } from "../lib/types";
+import { useCategories } from "../data/useCategories";
+import DishEditor from "./DishEditor";
 
 type ListWithCount = DishList & { count: number };
 
@@ -115,6 +117,8 @@ function DishListDetail({
   const [members, setMembers] = useState<Dish[]>([]);
   const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [picker, setPicker] = useState(false);
+  const [openDishId, setOpenDishId] = useState<string | null>(null);
+  const categories = useCategories();
 
   async function reload() {
     const [{ data: l }, { data: items }, { data: dishes }] = await Promise.all([
@@ -199,6 +203,22 @@ function DishListDetail({
     onFlash(`✅ ${ings.length} Zutaten auf die Einkaufsliste gesetzt`);
   }
 
+  if (openDishId) {
+    return (
+      <DishEditor
+        dishId={openDishId}
+        categories={categories}
+        onClose={() => {
+          setOpenDishId(null);
+          reload();
+        }}
+        onAddToList={(name, count) =>
+          onFlash(`✅ ${count} Zutaten von "${name}" auf die Liste gesetzt`)
+        }
+      />
+    );
+  }
+
   if (!list) return <div className="page">Lädt…</div>;
 
   const memberIds = new Set(members.map((d) => d.id));
@@ -228,10 +248,17 @@ function DishListDetail({
       <ul className="items">
         {members.map((d) => (
           <li key={d.id} className="item">
-            <span className="item-name">
+            <span className="item-name" onClick={() => setOpenDishId(d.id)}>
               {d.is_favorite ? "★ " : ""}
               {d.name}
             </span>
+            <button
+              className="ing-edit-btn"
+              onClick={() => setOpenDishId(d.id)}
+              aria-label="öffnen"
+            >
+              ›
+            </button>
             <button className="item-del" onClick={() => removeDish(d.id)}>
               ✕
             </button>
