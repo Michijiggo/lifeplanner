@@ -69,14 +69,9 @@ export default function FinanzDashboard() {
     { name: s.goal3_name, amount: Number(s.goal3_amount) },
   ].filter((g) => g.amount > 0);
 
-  const p1GoalsShare = p1ratio * totalGoals;
-  const p2GoalsShare = p2ratio * totalGoals;
-
+  // Das Restgeld auf dem Konto ist einfach der Anteil am Gesamtrestgeld
   const p1Leftover = leftover * (s.leftover_p1 / 100);
   const p2Leftover = leftover * (s.leftover_p2 / 100);
-
-  const p1Net = s.income_p1 - p1FixedShare - p1ShoppingShare - p1SavingsShare - p1GoalsShare - p1Leftover;
-  const p2Net = s.income_p2 - p2FixedShare - p2ShoppingShare - p2SavingsShare - p2GoalsShare - p2Leftover;
 
   return (
     <div className="page">
@@ -111,7 +106,6 @@ export default function FinanzDashboard() {
         goals={goals.map((g) => ({ name: g.name, amount: p1ratio * g.amount }))}
         leftover={p1Leftover}
         leftoverPct={s.leftover_p1}
-        net={p1Net}
       />
 
       {/* Person 2 */}
@@ -125,7 +119,6 @@ export default function FinanzDashboard() {
         goals={goals.map((g) => ({ name: g.name, amount: p2ratio * g.amount }))}
         leftover={p2Leftover}
         leftoverPct={s.leftover_p2}
-        net={p2Net}
       />
     </div>
   );
@@ -133,15 +126,15 @@ export default function FinanzDashboard() {
 
 function PersonCard({
   label, income, incomePct, fixedShare, shoppingShare, savingsShare,
-  goals, leftover, leftoverPct, net,
+  goals, leftover, leftoverPct,
 }: {
   label: string; income: number; incomePct: number;
   fixedShare: number; shoppingShare: number; savingsShare: number;
   goals: { name: string; amount: number }[];
-  leftover: number; leftoverPct: number; net: number;
+  leftover: number; leftoverPct: number;
 }) {
-  const totalOut = fixedShare + shoppingShare + savingsShare +
-    goals.reduce((s, g) => s + g.amount, 0) + leftover;
+  const totalCostShare = fixedShare + shoppingShare + savingsShare +
+    goals.reduce((s, g) => s + g.amount, 0);
 
   return (
     <div className="db-section card">
@@ -157,15 +150,15 @@ function PersonCard({
       {goals.map((g) => (
         <Row key={g.name} label={g.name || "Sparplan"} value={g.amount} />
       ))}
-      <Row label={`Restgeld (${leftoverPct}%)`} value={leftover} />
       <div className="db-divider" />
       <div className="db-total-row">
-        <span>Abzüge gesamt</span>
-        <span>{fmt(totalOut)} €</span>
+        <span>Gesamte Abzüge</span>
+        <span>{fmt(totalCostShare)} €</span>
       </div>
-      <div className={`db-net-row ${net < -0.01 ? "negative" : net > 0.01 ? "positive" : ""}`}>
-        <span>Verbleibend auf Konto</span>
-        <span className="db-net-value">{fmt(net)} €</span>
+      {/* Restgeld auf dem Konto = Anteil am Gesamtrestgeld nach dem gewählten Verhältnis */}
+      <div className={`db-net-row ${leftover < -0.01 ? "negative" : "positive"}`}>
+        <span>💳 Restgeld auf Konto ({leftoverPct}%)</span>
+        <span className="db-net-value">{fmt(leftover)} €</span>
       </div>
     </div>
   );
