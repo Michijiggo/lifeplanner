@@ -468,6 +468,7 @@ textarea {
 }
 .ing-row {
   gap: 8px;
+  align-items: flex-start;
 }
 .ing-cat-select {
   border: 1px solid var(--line);
@@ -475,6 +476,58 @@ textarea {
   padding: 6px 4px;
   font-size: 18px;
   background: #fff;
+  flex-shrink: 0;
+}
+.ing-edit-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+  padding: 4px 6px;
+}
+.ing-edit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ing-edit-name {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 16px;
+}
+.ing-edit-row {
+  display: flex;
+  gap: 6px;
+}
+.ing-edit-qty {
+  width: 80px;
+}
+.ing-edit-unit {
+  width: 90px;
+}
+.ing-edit-qty,
+.ing-edit-unit {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 0;
+}
+.ing-done {
+  flex: 1;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.import-btn {
+  background: #eaf7ee;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  width: 46px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 

@@ -16,6 +16,7 @@ export default function DishEditor({ dishId, categories, onClose, onAddToList }:
   const [quick, setQuick] = useState("");
   const [bulk, setBulk] = useState("");
   const [showBulk, setShowBulk] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const quickRef = useRef<HTMLInputElement>(null);
 
   async function reload() {
@@ -81,6 +82,15 @@ export default function DishEditor({ dishId, categories, onClose, onAddToList }:
   async function setIngredientCategory(id: string, category_id: number) {
     setIngs((prev) => prev.map((i) => (i.id === id ? { ...i, category_id } : i)));
     await supabase.from("dish_ingredients").update({ category_id }).eq("id", id);
+  }
+
+  // Lokale Änderung beim Tippen (sofort sichtbar)
+  function patchLocal(id: string, patch: Partial<DishIngredient>) {
+    setIngs((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }
+  // In die Datenbank speichern (beim Verlassen des Feldes)
+  async function persist(id: string, patch: Partial<DishIngredient>) {
+    await supabase.from("dish_ingredients").update(patch).eq("id", id);
   }
 
   async function removeIngredient(id: string) {
@@ -213,18 +223,66 @@ export default function DishEditor({ dishId, categories, onClose, onAddToList }:
                 </option>
               ))}
             </select>
-            <span className="item-name">
-              {i.name}
-              {(i.quantity || i.unit) && (
-                <span className="item-qty">
-                  {" "}
-                  {i.quantity ?? ""} {i.unit ?? ""}
+
+            {editingId === i.id ? (
+              <div className="ing-edit">
+                <input
+                  className="ing-edit-name"
+                  autoFocus
+                  value={i.name}
+                  placeholder="Zutat"
+                  onChange={(e) => patchLocal(i.id, { name: e.target.value })}
+                  onBlur={(e) => persist(i.id, { name: e.target.value.trim() || "Zutat" })}
+                />
+                <div className="ing-edit-row">
+                  <input
+                    className="ing-edit-qty"
+                    inputMode="decimal"
+                    placeholder="Menge"
+                    value={i.quantity ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.trim();
+                      patchLocal(i.id, {
+                        quantity: v === "" ? null : Number(v.replace(",", ".")),
+                      });
+                    }}
+                    onBlur={() => persist(i.id, { quantity: i.quantity })}
+                  />
+                  <input
+                    className="ing-edit-unit"
+                    placeholder="Einheit"
+                    value={i.unit ?? ""}
+                    onChange={(e) => patchLocal(i.id, { unit: e.target.value || null })}
+                    onBlur={(e) => persist(i.id, { unit: e.target.value.trim() || null })}
+                  />
+                  <button className="ing-done" onClick={() => setEditingId(null)}>
+                    ✓
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <span className="item-name" onClick={() => setEditingId(i.id)}>
+                  {i.name}
+                  {(i.quantity || i.unit) && (
+                    <span className="item-qty">
+                      {" "}
+                      {i.quantity ?? ""} {i.unit ?? ""}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-            <button className="item-del" onClick={() => removeIngredient(i.id)}>
-              ✕
-            </button>
+                <button
+                  className="ing-edit-btn"
+                  onClick={() => setEditingId(i.id)}
+                  aria-label="bearbeiten"
+                >
+                  ✎
+                </button>
+                <button className="item-del" onClick={() => removeIngredient(i.id)}>
+                  ✕
+                </button>
+              </>
+            )}
           </li>
         ))}
       </ul>

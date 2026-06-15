@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Dish, type DishIngredient } from "../lib/types";
+import { parseIngredientLine, parseRecipes } from "../data/categorize";
 import DishEditor from "./DishEditor";
 
 export default function Dishes() {
@@ -10,6 +11,9 @@ export default function Dishes() {
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importing, setImporting] = useState(false);
 
   async function reload() {
     const { data } = await supabase
@@ -49,6 +53,46 @@ export default function Dishes() {
     }
     await reload();
     setOpenId((data as Dish).id);
+  }
+
+  async function importRecipes() {
+    const recipes = parseRecipes(importText);
+    if (recipes.length === 0) {
+      flash("Keine Rezepte erkannt.");
+      return;
+    }
+    setImporting(true);
+    let dishCount = 0;
+    let ingCount = 0;
+    for (const r of recipes) {
+      const { data: d, error } = await supabase
+        .from("dishes")
+        .insert({ name: r.name })
+        .select()
+        .single();
+      if (error || !d) continue;
+      dishCount++;
+      const parsed = r.lines
+        .map((l) => parseIngredientLine(l))
+        .filter((p): p is NonNullable<typeof p> => p !== null);
+      if (parsed.length > 0) {
+        const rows = parsed.map((p, idx) => ({
+          dish_id: (d as Dish).id,
+          name: p.name,
+          quantity: p.quantity,
+          unit: p.unit,
+          category_id: p.category_id,
+          sort_order: idx,
+        }));
+        const { error: e2 } = await supabase.from("dish_ingredients").insert(rows);
+        if (!e2) ingCount += parsed.length;
+      }
+    }
+    setImporting(false);
+    setImportText("");
+    setShowImport(false);
+    await reload();
+    flash(`✅ ${dishCount} Rezepte mit ${ingCount} Zutaten importiert`);
   }
 
   async function toggleFav(d: Dish) {
@@ -109,6 +153,9 @@ export default function Dishes() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <button className="import-btn" onClick={() => setShowImport(true)} aria-label="Rezepte importieren">
+          📋
+        </button>
         <button className="add-btn" onClick={createDish}>
           +
         </button>
@@ -141,6 +188,37 @@ export default function Dishes() {
           </div>
         ))}
       </div>
+
+      {showImport && (
+        <div className="sheet-backdrop" onClick={() => !importing && setShowImport(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <h3>Mehrere Rezepte importieren</h3>
+            <p className="empty-hint" style={{ textAlign: "left", marginTop: 0 }}>
+              Pro Rezept eine Überschrift mit <code>//</code> davor, darunter die Zutaten
+              (eine pro Zeile).
+            </p>
+            <textarea
+              className="bulk-text"
+              autoFocus
+              placeholder={"// Spaghetti Bolognese\n500 g Hackfleisch\n1 Dose Tomaten\n1 Zwiebel\n\n// Pfannkuchen\n250 g Mehl\n3 Eier\n500 ml Milch"}
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+            />
+            <div className="bulk-actions">
+              <button
+                className="sheet-close"
+                onClick={() => setShowImport(false)}
+                disabled={importing}
+              >
+                Abbrechen
+              </button>
+              <button className="add-btn-wide" onClick={importRecipes} disabled={importing}>
+                {importing ? "Importiere…" : "Importieren"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className="toast">{toast}</div>}
     </div>
