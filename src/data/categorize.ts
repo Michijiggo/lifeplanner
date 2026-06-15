@@ -49,9 +49,20 @@ const FRACTIONS: Record<string, number> = {
 
 // Stichwort -> Kategorie-ID. Reihenfolge zählt: spezifischere Begriffe zuerst,
 // damit z. B. "tomatenmark" vor "tomate" greift.
-// Kategorien: 1 = Obst & Gemüse, 3 = Gekühltes, 4 = Fleisch & Fisch.
-// Alles ohne Treffer landet in 12 = Sonstiges.
+// Kategorien: 1 = Obst & Gemüse, 3 = Gekühltes, 4 = Fleisch & Fisch,
+// 11 = Drogerie. Alles ohne Treffer landet in 12 = Sonstiges.
 const KEYWORDS: [string, number][] = [
+  // Drogerie (Körperpflege, Kosmetik, Baby)
+  ["shampoo", 11], ["duschgel", 11], ["duschbad", 11], ["seife", 11],
+  ["deo", 11], ["zahnpasta", 11], ["zahnbürste", 11], ["zahnseide", 11],
+  ["mundwasser", 11], ["rasier", 11], ["haarspray", 11], ["haarspülung", 11],
+  ["bodylotion", 11], ["handcreme", 11], ["gesichtscreme", 11], ["sonnencreme", 11],
+  ["windel", 11], ["feuchttücher", 11], ["babyöl", 11],
+  ["wattepad", 11], ["wattestäbchen", 11], ["watte", 11], ["tampon", 11],
+  ["binde", 11], ["pflaster", 11], ["taschentuch", 11], ["mascara", 11],
+  ["wimperntusche", 11], ["lippenstift", 11], ["lidschatten", 11], ["puder", 11],
+  ["foundation", 11], ["nagellack", 11], ["make-up", 11], ["makeup", 11],
+  ["schminke", 11], ["parfum", 11], ["parfüm", 11], ["badezusatz", 11],
   // Fleisch & Fisch
   ["hackfleisch", 4], ["hähnchen", 4], ["hühnchen", 4], ["hühner", 4],
   ["geflügel", 4], ["pute", 4], ["hack", 4], ["rind", 4], ["schwein", 4],
