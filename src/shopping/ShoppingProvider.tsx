@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import { supabase } from "../lib/supabase";
 import { isStaple } from "../data/categorize";
 import { UNCATEGORIZED } from "../lib/types";
@@ -23,13 +23,18 @@ type Ctx = {
 
 const ShoppingContext = createContext<Ctx | null>(null);
 
+type Toast = { msg: string; undoIds?: string[] };
+
 export function ShoppingProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Pending | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const timer = useRef<number>();
 
-  function flash(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2600);
+  function flash(msg: string, undoIds?: string[]) {
+    if (timer.current) clearTimeout(timer.current);
+    setToast({ msg, undoIds });
+    // Mit Rückgängig-Button etwas länger stehen lassen.
+    timer.current = window.setTimeout(() => setToast(null), undoIds ? 7000 : 2600);
   }
 
   async function insert(rows: NewShoppingItem[]) {
@@ -44,12 +49,20 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
       category_id: r.category_id ?? UNCATEGORIZED,
       source_dish_id: r.source_dish_id ?? null,
     }));
-    const { error } = await supabase.from("shopping_items").insert(payload);
+    const { data, error } = await supabase.from("shopping_items").insert(payload).select("id");
     if (error) {
       alert(error.message);
       return;
     }
-    flash(`✅ ${rows.length} Zutaten auf die Einkaufsliste`);
+    const ids = ((data as { id: string }[]) ?? []).map((r) => r.id);
+    flash(`✅ ${rows.length} Zutaten hinzugefügt`, ids);
+  }
+
+  async function undo(ids: string[]) {
+    if (timer.current) clearTimeout(timer.current);
+    setToast(null);
+    await supabase.from("shopping_items").delete().in("id", ids);
+    flash("Rückgängig gemacht");
   }
 
   async function addToShopping(rows: NewShoppingItem[]) {
@@ -140,7 +153,16 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      {toast && (
+        <div className="toast">
+          <span>{toast.msg}</span>
+          {toast.undoIds && toast.undoIds.length > 0 && (
+            <button className="toast-undo" onClick={() => undo(toast.undoIds!)}>
+              Rückgängig
+            </button>
+          )}
+        </div>
+      )}
     </ShoppingContext.Provider>
   );
 }

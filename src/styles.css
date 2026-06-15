@@ -717,13 +717,25 @@ textarea {
   transform: translateX(-50%);
   background: #1a2420;
   color: #fff;
-  padding: 12px 18px;
+  padding: 10px 12px 10px 18px;
   border-radius: 999px;
   font-size: 14px;
   z-index: 30;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  max-width: 90%;
-  text-align: center;
+  max-width: 92%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast-undo {
+  background: rgba(255, 255, 255, 0.16);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  flex-shrink: 0;
 }
 
 /* ---------- Login ---------- */
