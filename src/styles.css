@@ -804,11 +804,9 @@ textarea {
   max-width: 600px;
   margin: 0 auto;
   border-radius: 18px 18px 0 0;
-  padding: 18px 18px calc(18px + var(--safe-bottom));
+  padding: 18px 18px calc(12px + var(--safe-bottom));
   max-height: 88dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -816,6 +814,11 @@ textarea {
   margin: 0 0 12px;
 }
 .sheet-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -829,11 +832,13 @@ textarea {
   font-size: 16px;
 }
 .sheet-close {
+  flex-shrink: 0;
   margin-top: 12px;
+  padding: 10px;
   background: none;
   border: none;
   color: var(--muted);
-  padding: 10px;
+  width: 100%;
 }
 
 /* ---------- Vorrats-Abfrage ---------- */

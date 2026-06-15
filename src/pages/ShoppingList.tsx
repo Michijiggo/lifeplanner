@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { useCategories, reloadCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Category, type ShoppingItem } from "../lib/types";
@@ -348,6 +349,40 @@ function CategorySortSheet({
   onClose: () => void;
 }) {
   const [order, setOrder] = useState<Category[]>(categories);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Der eigentliche Scroll-Container der App ist `.content`, nicht der Body.
+    // Deshalb wird das Sheet per Portal an den Body gehängt (siehe unten) und
+    // jeder Touch ausserhalb der scrollbaren Liste global geblockt. Damit kann
+    // auf dem iPhone (auch als Home-Screen-PWA) garantiert nichts im Hintergrund
+    // scrollen, während die Liste im Sheet selbst frei scrollt.
+    const guard = (e: TouchEvent) => {
+      const list = listRef.current;
+      if (list && list.contains(e.target as Node)) {
+        // Innerhalb der Liste: natives Scrollen erlauben, aber Scroll-Chaining
+        // an den Raendern verhindern (sonst scrollt iOS den Hintergrund weiter).
+        const atTop = list.scrollTop <= 0;
+        const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+        const noScroll = list.scrollHeight <= list.clientHeight;
+        if (noScroll) {
+          e.preventDefault();
+          return;
+        }
+        if (e.cancelable) {
+          const touchY = e.touches[0]?.clientY ?? 0;
+          const lastY = (list as any)._lastTouchY ?? touchY;
+          (list as any)._lastTouchY = touchY;
+          const goingDown = touchY > lastY;
+          if ((atTop && goingDown) || (atBottom && !goingDown)) e.preventDefault();
+        }
+        return;
+      }
+      e.preventDefault();
+    };
+    document.addEventListener("touchmove", guard, { passive: false });
+    return () => document.removeEventListener("touchmove", guard);
+  }, []);
 
   async function persist(arr: Category[]) {
     await Promise.all(
@@ -367,14 +402,14 @@ function CategorySortSheet({
     persist(next);
   }
 
-  return (
+  return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <h3>Kategorien sortieren</h3>
         <p className="empty-hint" style={{ textAlign: "left", marginTop: 0 }}>
           Bring die Reihenfolge in deinen Laden-Rundgang. Gilt für die ganze App.
         </p>
-        <div className="sheet-list">
+        <div ref={listRef} className="sheet-list">
           {order.map((c, i) => (
             <div key={c.id} className="sort-row">
               <span className="sort-name">
@@ -405,6 +440,7 @@ function CategorySortSheet({
           Fertig
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
