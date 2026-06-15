@@ -792,6 +792,7 @@ textarea {
 .sheet-backdrop {
   position: fixed;
   inset: 0;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: flex-end;
@@ -804,7 +805,7 @@ textarea {
   margin: 0 auto;
   border-radius: 18px 18px 0 0;
   padding: 18px 18px calc(12px + var(--safe-bottom));
-  max-height: 85dvh;
+  max-height: 88dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
