@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { useCategories } from "../data/useCategories";
+import { useCategories, reloadCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Category, type ShoppingItem } from "../lib/types";
 import { parseIngredientLine } from "../data/categorize";
 
@@ -12,6 +12,7 @@ export default function ShoppingList() {
   const [newUnit, setNewUnit] = useState("");
   const [newCat, setNewCat] = useState<number>(UNCATEGORIZED);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showSort, setShowSort] = useState(false);
 
   // Erstes Laden
   useEffect(() => {
@@ -195,6 +196,14 @@ export default function ShoppingList() {
         </div>
       </form>
 
+      <button className="sort-cats-btn" onClick={() => setShowSort(true)}>
+        ↕ Kategorien sortieren
+      </button>
+
+      {showSort && (
+        <CategorySortSheet categories={categories} onClose={() => setShowSort(false)} />
+      )}
+
       {open.length === 0 && done.length === 0 && (
         <div className="empty">
           <div className="empty-emoji">🧺</div>
@@ -327,6 +336,75 @@ export default function ShoppingList() {
           </ul>
         </section>
       )}
+    </div>
+  );
+}
+
+function CategorySortSheet({
+  categories,
+  onClose,
+}: {
+  categories: Category[];
+  onClose: () => void;
+}) {
+  const [order, setOrder] = useState<Category[]>(categories);
+
+  async function persist(arr: Category[]) {
+    await Promise.all(
+      arr.map((c, idx) =>
+        supabase.from("categories").update({ sort_order: (idx + 1) * 10 }).eq("id", c.id)
+      )
+    );
+    reloadCategories();
+  }
+
+  function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= order.length) return;
+    const next = [...order];
+    [next[i], next[j]] = [next[j], next[i]];
+    setOrder(next);
+    persist(next);
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <h3>Kategorien sortieren</h3>
+        <p className="empty-hint" style={{ textAlign: "left", marginTop: 0 }}>
+          Bring die Reihenfolge in deinen Laden-Rundgang. Gilt für die ganze App.
+        </p>
+        <div className="sheet-list">
+          {order.map((c, i) => (
+            <div key={c.id} className="sort-row">
+              <span className="sort-name">
+                {c.emoji} {c.name}
+              </span>
+              <div className="sort-arrows">
+                <button
+                  className="sort-arrow"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  aria-label="nach oben"
+                >
+                  ▲
+                </button>
+                <button
+                  className="sort-arrow"
+                  onClick={() => move(i, 1)}
+                  disabled={i === order.length - 1}
+                  aria-label="nach unten"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button className="sheet-close" onClick={onClose}>
+          Fertig
+        </button>
+      </div>
     </div>
   );
 }
