@@ -375,7 +375,11 @@ function CategorySortSheet({
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="sheet"
+        onClick={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         <h3>Kategorien sortieren</h3>
         <p className="empty-hint" style={{ textAlign: "left", marginTop: 0 }}>
           Bring die Reihenfolge in deinen Laden-Rundgang. Gilt für die ganze App.
