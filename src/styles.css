@@ -1137,3 +1137,170 @@ textarea {
 .sort-arrow:disabled {
   opacity: 0.3;
 }
+
+/* ---------- Finanzen ---------- */
+.fc-form {
+  padding: 14px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fc-edit-hint {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fc-person-tabs {
+  display: flex;
+  gap: 8px;
+}
+.fc-person-tab {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.fc-person-tab.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  font-weight: 600;
+}
+.fc-input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;
+  background: var(--bg);
+  width: 100%;
+}
+.fc-row {
+  display: flex;
+  gap: 8px;
+}
+.fc-amount {
+  flex: 2;
+}
+.fc-day {
+  flex: 1;
+  min-width: 0;
+}
+.fc-account {
+  flex: 2;
+}
+.fc-actions {
+  display: flex;
+  gap: 8px;
+}
+.fc-save-btn {
+  flex: 1;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.fc-cancel-btn {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.fc-section {
+  margin-bottom: 20px;
+}
+.fc-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.fc-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.fc-section-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+}
+.fc-list {
+  padding: 0;
+  overflow: hidden;
+}
+.fc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  gap: 10px;
+}
+.fc-item:last-child {
+  border-bottom: none;
+}
+.fc-item-main {
+  flex: 1;
+  min-width: 0;
+}
+.fc-item-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+}
+.fc-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.fc-badge {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+.fc-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.fc-item-amount {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.fc-item-btns {
+  display: flex;
+  gap: 4px;
+}
+.fc-total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--green);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.fc-total-amount {
+  font-size: 20px;
+  font-weight: 700;
+}

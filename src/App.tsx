@@ -6,8 +6,9 @@ import Dishes from "./pages/Dishes";
 import DishLists from "./pages/DishLists";
 import MealPlan from "./pages/MealPlan";
 import Laundry from "./pages/Laundry";
+import Finanzen from "./pages/Finanzen";
 
-type Area = "shop" | "laundry";
+type Area = "shop" | "laundry" | "finance";
 type Tab = "list" | "dishes" | "lists" | "plan";
 
 export default function App() {
@@ -30,7 +31,8 @@ export default function App() {
     lists: "Listen",
     plan: "Wochenplan",
   };
-  const headerTitle = area === "laundry" ? "Wäsche" : titles[tab];
+  const headerTitle =
+    area === "laundry" ? "Wäsche" : area === "finance" ? "Finanzen" : titles[tab];
 
   return (
     <div className="app">
@@ -54,6 +56,7 @@ export default function App() {
           </>
         )}
         {area === "laundry" && <Laundry />}
+        {area === "finance" && <Finanzen />}
       </main>
 
       {area === "shop" && (
@@ -98,6 +101,12 @@ export default function App() {
               }}
             >
               🧺 Wäsche
+            </button>
+            <button
+              className={`drawer-item ${area === "finance" ? "active" : ""}`}
+              onClick={() => { setArea("finance"); setDrawer(false); }}
+            >
+              💰 Finanzen
             </button>
             <button className="drawer-logout" onClick={logout}>
               Abmelden

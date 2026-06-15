@@ -59,6 +59,16 @@ export type DishListItem = {
 
 export const UNCATEGORIZED = 12; // "Sonstiges"
 
+export type FixedCost = {
+  id: string;
+  person: 1 | 2;
+  name: string;
+  amount: number;
+  debit_day: number | null;
+  account: string | null;
+  created_at: string;
+};
+
 export type LaundryKind = "washer" | "dryer";
 export type LaundryTimer = {
   kind: LaundryKind;
