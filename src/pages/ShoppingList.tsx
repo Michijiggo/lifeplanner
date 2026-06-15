@@ -11,6 +11,7 @@ export default function ShoppingList() {
   const [newQty, setNewQty] = useState("");
   const [newUnit, setNewUnit] = useState("");
   const [newCat, setNewCat] = useState<number>(UNCATEGORIZED);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Erstes Laden
   useEffect(() => {
@@ -142,6 +143,14 @@ export default function ShoppingList() {
     await supabase.from("shopping_items").delete().eq("id", item.id);
   }
 
+  // Bearbeiten: lokal sofort, in DB beim Verlassen des Feldes speichern.
+  function patchLocal(id: string, patch: Partial<ShoppingItem>) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }
+  async function persist(id: string, patch: Partial<ShoppingItem>) {
+    await supabase.from("shopping_items").update(patch).eq("id", id);
+  }
+
   async function clearChecked() {
     if (done.length === 0) return;
     if (!confirm(`${done.length} erledigte Artikel entfernen?`)) return;
@@ -204,23 +213,84 @@ export default function ShoppingList() {
               <span>{cat?.emoji ?? "🛒"}</span> {cat?.name ?? "Sonstiges"}
             </h3>
             <ul className="items">
-              {list.map((it) => (
-                <li key={it.id} className="item">
-                  <button className="check" onClick={() => toggle(it)} aria-label="abhaken" />
-                  <span className="item-name" onClick={() => toggle(it)}>
-                    {it.name}
-                    {(it.quantity || it.unit) && (
-                      <span className="item-qty">
-                        {" "}
-                        {it.quantity ?? ""} {it.unit ?? ""}
-                      </span>
-                    )}
-                  </span>
-                  <button className="item-del" onClick={() => remove(it)} aria-label="löschen">
-                    ✕
-                  </button>
-                </li>
-              ))}
+              {list.map((it) =>
+                editingId === it.id ? (
+                  <li key={it.id} className="item">
+                    <select
+                      className="ing-cat-select"
+                      value={it.category_id ?? UNCATEGORIZED}
+                      onChange={(e) => {
+                        const c = Number(e.target.value);
+                        patchLocal(it.id, { category_id: c });
+                        persist(it.id, { category_id: c });
+                      }}
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.emoji}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="ing-edit">
+                      <input
+                        className="ing-edit-name"
+                        autoFocus
+                        value={it.name}
+                        onChange={(e) => patchLocal(it.id, { name: e.target.value })}
+                        onBlur={(e) => persist(it.id, { name: e.target.value.trim() || "Artikel" })}
+                      />
+                      <div className="ing-edit-row">
+                        <input
+                          className="ing-edit-qty"
+                          inputMode="decimal"
+                          placeholder="Menge"
+                          value={it.quantity ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value.trim();
+                            patchLocal(it.id, {
+                              quantity: v === "" ? null : Number(v.replace(",", ".")),
+                            });
+                          }}
+                          onBlur={() => persist(it.id, { quantity: it.quantity })}
+                        />
+                        <input
+                          className="ing-edit-unit"
+                          placeholder="Einheit"
+                          value={it.unit ?? ""}
+                          onChange={(e) => patchLocal(it.id, { unit: e.target.value || null })}
+                          onBlur={(e) => persist(it.id, { unit: e.target.value.trim() || null })}
+                        />
+                        <button className="ing-done" onClick={() => setEditingId(null)}>
+                          ✓
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ) : (
+                  <li key={it.id} className="item">
+                    <button className="check" onClick={() => toggle(it)} aria-label="abhaken" />
+                    <span className="item-name" onClick={() => toggle(it)}>
+                      {it.name}
+                      {(it.quantity || it.unit) && (
+                        <span className="item-qty">
+                          {" "}
+                          {it.quantity ?? ""} {it.unit ?? ""}
+                        </span>
+                      )}
+                    </span>
+                    <button
+                      className="ing-edit-btn"
+                      onClick={() => setEditingId(it.id)}
+                      aria-label="bearbeiten"
+                    >
+                      ✎
+                    </button>
+                    <button className="item-del" onClick={() => remove(it)} aria-label="löschen">
+                      ✕
+                    </button>
+                  </li>
+                )
+              )}
             </ul>
           </section>
         );
