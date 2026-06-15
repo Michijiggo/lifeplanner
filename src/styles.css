@@ -35,13 +35,19 @@ body {
 button {
   font-family: inherit;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button:active {
+  filter: brightness(0.93);
 }
 
 input,
 select,
 textarea {
   font-family: inherit;
-  font-size: 16px;
+  font-size: 16px; /* 16px verhindert Auto-Zoom auf iOS */
 }
 
 /* ---------- Splash ---------- */
@@ -822,4 +828,81 @@ textarea {
   border: none;
   color: var(--green);
   font-size: 14px;
+}
+
+/* ---------- Mobile-Feinschliff: groessere Touch-Flaechen ---------- */
+.item {
+  padding: 14px;
+  gap: 12px;
+  min-height: 56px;
+}
+.check {
+  width: 28px;
+  height: 28px;
+}
+.item-del,
+.ing-edit-btn {
+  width: 42px;
+  height: 42px;
+  font-size: 18px;
+  border-radius: 8px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.fav {
+  width: 42px;
+  height: 42px;
+  font-size: 24px;
+  display: grid;
+  place-items: center;
+}
+.add-meta {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.add-meta select {
+  flex: 1 1 150px;
+}
+.add-qty,
+.add-unit {
+  width: 72px;
+}
+.add-btn,
+.import-btn {
+  min-height: 46px;
+}
+.dish-card {
+  padding: 16px;
+  min-height: 60px;
+}
+.dish-add {
+  padding: 12px 14px;
+}
+.chip {
+  padding: 8px 8px 8px 14px;
+  font-size: 15px;
+}
+.chip button {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+.chip-add {
+  width: 38px;
+  height: 38px;
+  font-size: 20px;
+}
+.tabbar button {
+  padding: 12px 0 14px;
+  min-height: 58px;
+}
+.tab-ico {
+  font-size: 24px;
+}
+.sheet-item {
+  padding: 16px;
+}
+.ing-cat-select {
+  min-height: 42px;
 }
