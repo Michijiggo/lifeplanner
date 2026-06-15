@@ -349,6 +349,12 @@ function CategorySortSheet({
 }) {
   const [order, setOrder] = useState<Category[]>(categories);
 
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   async function persist(arr: Category[]) {
     await Promise.all(
       arr.map((c, idx) =>
