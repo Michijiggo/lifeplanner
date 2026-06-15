@@ -803,17 +803,21 @@ textarea {
   max-width: 600px;
   margin: 0 auto;
   border-radius: 18px 18px 0 0;
-  padding: 18px 18px 0;
+  padding: 18px 18px calc(12px + var(--safe-bottom));
   max-height: 85dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .sheet h3 {
   margin: 0 0 12px;
 }
 .sheet-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -827,11 +831,10 @@ textarea {
   font-size: 16px;
 }
 .sheet-close {
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   margin-top: 12px;
-  padding: 10px 10px calc(10px + var(--safe-bottom));
-  background: var(--card);
+  padding: 10px;
+  background: none;
   border: none;
   color: var(--muted);
   width: 100%;

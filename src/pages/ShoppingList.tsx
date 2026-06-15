@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { useCategories, reloadCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Category, type ShoppingItem } from "../lib/types";
@@ -348,34 +349,39 @@ function CategorySortSheet({
   onClose: () => void;
 }) {
   const [order, setOrder] = useState<Category[]>(categories);
-  const backdropRef = useRef<HTMLDivElement>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // iOS PWA: overflow:hidden on body is ignored; position:fixed is the only reliable lock
-    const prevPos = document.body.style.position;
-    const prevTop = document.body.style.top;
-    const prevWidth = document.body.style.width;
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-
-    // non-passive touchmove on backdrop to block background scroll
-    const backdrop = backdropRef.current;
-    const blockTouch = (e: TouchEvent) => {
-      if (sheetRef.current && sheetRef.current.contains(e.target as Node)) return;
+    // Der eigentliche Scroll-Container der App ist `.content`, nicht der Body.
+    // Deshalb wird das Sheet per Portal an den Body gehängt (siehe unten) und
+    // jeder Touch ausserhalb der scrollbaren Liste global geblockt. Damit kann
+    // auf dem iPhone (auch als Home-Screen-PWA) garantiert nichts im Hintergrund
+    // scrollen, während die Liste im Sheet selbst frei scrollt.
+    const guard = (e: TouchEvent) => {
+      const list = listRef.current;
+      if (list && list.contains(e.target as Node)) {
+        // Innerhalb der Liste: natives Scrollen erlauben, aber Scroll-Chaining
+        // an den Raendern verhindern (sonst scrollt iOS den Hintergrund weiter).
+        const atTop = list.scrollTop <= 0;
+        const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+        const noScroll = list.scrollHeight <= list.clientHeight;
+        if (noScroll) {
+          e.preventDefault();
+          return;
+        }
+        if (e.cancelable) {
+          const touchY = e.touches[0]?.clientY ?? 0;
+          const lastY = (list as any)._lastTouchY ?? touchY;
+          (list as any)._lastTouchY = touchY;
+          const goingDown = touchY > lastY;
+          if ((atTop && goingDown) || (atBottom && !goingDown)) e.preventDefault();
+        }
+        return;
+      }
       e.preventDefault();
     };
-    backdrop?.addEventListener("touchmove", blockTouch, { passive: false });
-
-    return () => {
-      backdrop?.removeEventListener("touchmove", blockTouch);
-      document.body.style.position = prevPos;
-      document.body.style.top = prevTop;
-      document.body.style.width = prevWidth;
-      window.scrollTo(0, scrollY);
-    };
+    document.addEventListener("touchmove", guard, { passive: false });
+    return () => document.removeEventListener("touchmove", guard);
   }, []);
 
   async function persist(arr: Category[]) {
@@ -396,18 +402,14 @@ function CategorySortSheet({
     persist(next);
   }
 
-  return (
-    <div ref={backdropRef} className="sheet-backdrop" onClick={onClose}>
-      <div
-        ref={sheetRef}
-        className="sheet"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return createPortal(
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <h3>Kategorien sortieren</h3>
         <p className="empty-hint" style={{ textAlign: "left", marginTop: 0 }}>
           Bring die Reihenfolge in deinen Laden-Rundgang. Gilt für die ganze App.
         </p>
-        <div className="sheet-list">
+        <div ref={listRef} className="sheet-list">
           {order.map((c, i) => (
             <div key={c.id} className="sort-row">
               <span className="sort-name">
@@ -438,6 +440,7 @@ function CategorySortSheet({
           Fertig
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
