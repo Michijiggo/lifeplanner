@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories, reloadCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Category, type ShoppingItem } from "../lib/types";
@@ -348,11 +348,34 @@ function CategorySortSheet({
   onClose: () => void;
 }) {
   const [order, setOrder] = useState<Category[]>(categories);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    // iOS PWA: overflow:hidden on body is ignored; position:fixed is the only reliable lock
+    const prevPos = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    // non-passive touchmove on backdrop to block background scroll
+    const backdrop = backdropRef.current;
+    const blockTouch = (e: TouchEvent) => {
+      if (sheetRef.current && sheetRef.current.contains(e.target as Node)) return;
+      e.preventDefault();
+    };
+    backdrop?.addEventListener("touchmove", blockTouch, { passive: false });
+
+    return () => {
+      backdrop?.removeEventListener("touchmove", blockTouch);
+      document.body.style.position = prevPos;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
+    };
   }, []);
 
   async function persist(arr: Category[]) {
@@ -374,11 +397,11 @@ function CategorySortSheet({
   }
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div ref={backdropRef} className="sheet-backdrop" onClick={onClose}>
       <div
+        ref={sheetRef}
         className="sheet"
         onClick={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
       >
         <h3>Kategorien sortieren</h3>
         <p className="empty-hint" style={{ textAlign: "left", marginTop: 0 }}>
