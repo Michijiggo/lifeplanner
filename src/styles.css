@@ -1298,7 +1298,7 @@ textarea {
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
-  color: var(--muted);
+  color: var(--text);
   flex-shrink: 0;
 }
 .fc-item-meta {
