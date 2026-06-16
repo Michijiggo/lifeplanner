@@ -354,14 +354,22 @@ textarea {
 
 /* ---------- Kategorie-Gruppen & Items ---------- */
 .cat-group {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
 }
 .cat-title {
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  margin: 0 0 8px 4px;
+  font-weight: 700;
+  margin: 0;
+  padding: 9px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -372,9 +380,6 @@ textarea {
   margin: 0;
   padding: 0;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
 }
 .item {
   display: flex;
@@ -1138,6 +1143,25 @@ textarea {
   opacity: 0.3;
 }
 
+/* ---------- Icon-Buttons (edit/del in fc-item) ---------- */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.edit-btn {
+  background: #eaf7ee;
+}
+.del-btn {
+  background: #f6eceb;
+}
+
 /* ---------- Finanzen ---------- */
 .fc-form {
   padding: 14px;
@@ -1243,9 +1267,10 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 14px 14px;
   border-bottom: 1px solid var(--line);
   gap: 10px;
+  min-height: 64px;
 }
 .fc-item:last-child {
   border-bottom: none;
@@ -1256,8 +1281,8 @@ textarea {
 }
 .fc-item-name {
   display: block;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 600;
 }
 .fc-item-meta {
   display: flex;
@@ -1280,9 +1305,10 @@ textarea {
   flex-shrink: 0;
 }
 .fc-item-amount {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   white-space: nowrap;
+  color: var(--text);
 }
 .fc-item-btns {
   display: flex;

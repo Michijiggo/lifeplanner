@@ -89,6 +89,16 @@ export default function Laundry() {
     return () => clearInterval(id);
   }, []);
 
+  // Wenn die App wieder in den Vordergrund kommt, sofort jetzt-Zeit aktualisieren,
+  // damit abgelaufene Timer direkt erkannt werden ohne auf den nächsten Tick warten.
+  useEffect(() => {
+    function onVisible() {
+      if (!document.hidden) setNow(Date.now());
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   // Bei Ablauf benachrichtigen
   useEffect(() => {
     for (const m of MACHINES) {
@@ -210,9 +220,9 @@ export default function Laundry() {
       })}
 
       <p className="empty-hint" style={{ textAlign: "left" }}>
-        Tipp: Damit die Benachrichtigung auch bei gesperrtem Handy ankommt, füge die
-        App zum Home-Bildschirm hinzu und lass sie im Hintergrund. (Zuverlässiger
-        Push bei komplett geschlossener App folgt als nächster Ausbau.)
+        Tipp: Die Benachrichtigung erscheint, sobald du die App öffnest und der Timer
+        abgelaufen ist. Echte Hintergrund-Push (App vollständig geschlossen) braucht
+        einen Server-Push – das kommt in einem späteren Update.
       </p>
     </div>
   );

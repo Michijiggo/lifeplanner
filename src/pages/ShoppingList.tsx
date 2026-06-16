@@ -517,12 +517,17 @@ function CategorySortSheet({
   }, []);
 
   async function persist(arr: Category[]) {
-    await Promise.all(
+    const results = await Promise.all(
       arr.map((c, idx) =>
         supabase.from("categories").update({ sort_order: (idx + 1) * 10 }).eq("id", c.id)
       )
     );
-    reloadCategories();
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      alert("Sortierung konnte nicht gespeichert werden: " + failed.error.message);
+      return;
+    }
+    await reloadCategories();
   }
 
   function move(i: number, dir: -1 | 1) {
