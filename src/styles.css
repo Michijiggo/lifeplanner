@@ -1260,20 +1260,17 @@ textarea {
   color: var(--green-dark);
 }
 .fc-list {
-  padding: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .fc-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 14px;
-  border-bottom: 1px solid var(--line);
+  padding: 14px;
   gap: 10px;
   min-height: 64px;
-}
-.fc-item:last-child {
-  border-bottom: none;
 }
 .fc-item-main {
   flex: 1;

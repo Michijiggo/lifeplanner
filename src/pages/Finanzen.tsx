@@ -123,9 +123,9 @@ export default function Finanzen() {
           {forPerson(p).length === 0 ? (
             <p className="empty-hint">Noch keine Fixkosten</p>
           ) : (
-            <div className="card fc-list">
+            <div className="fc-list">
               {forPerson(p).map((c) => (
-                <div key={c.id} className="fc-item">
+                <div key={c.id} className="fc-item card">
                   <div className="fc-item-main">
                     <span className="fc-item-name">{c.name}</span>
                     <div className="fc-item-meta">
