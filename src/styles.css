@@ -1262,14 +1262,16 @@ textarea {
 .fc-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .fc-item {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding: 14px;
-  border-left: 3px solid var(--green);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 .fc-item-top {
   display: flex;
@@ -1284,7 +1286,7 @@ textarea {
   gap: 8px;
 }
 .fc-item-name {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   flex: 1;
   min-width: 0;
@@ -1293,10 +1295,10 @@ textarea {
   white-space: nowrap;
 }
 .fc-item-amount {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
-  color: var(--green-dark);
+  color: var(--muted);
   flex-shrink: 0;
 }
 .fc-item-meta {
