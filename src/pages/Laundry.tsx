@@ -171,14 +171,14 @@ export default function Laundry() {
     if (perm === "default") enableNotifications();
     await supabase
       .from("laundry_timers")
-      .upsert({ kind, finish_at: finish, updated_at: new Date().toISOString() });
+      .upsert({ kind, finish_at: finish, notified_at: null, updated_at: new Date().toISOString() });
   }
 
   async function cancel(kind: LaundryKind) {
     setTimers((prev) => ({ ...prev, [kind]: null }));
     await supabase
       .from("laundry_timers")
-      .upsert({ kind, finish_at: null, updated_at: new Date().toISOString() });
+      .upsert({ kind, finish_at: null, notified_at: null, updated_at: new Date().toISOString() });
   }
 
   return (
