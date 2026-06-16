@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "../data/useCategories";
 import { UNCATEGORIZED, type Dish, type DishIngredient } from "../lib/types";
-import { parseIngredientLine, parseRecipes } from "../data/categorize";
+import { extractNutritionFromLines, parseIngredientLine, parseRecipes } from "../data/categorize";
 import { useShopping } from "../shopping/ShoppingProvider";
 import DishEditor from "./DishEditor";
 
@@ -67,14 +67,21 @@ export default function Dishes() {
     let dishCount = 0;
     let ingCount = 0;
     for (const r of recipes) {
+      const { nutrition, remaining } = extractNutritionFromLines(r.lines);
+      const dishInsert: Record<string, unknown> = { name: r.name };
+      if (nutrition.servings !== undefined) dishInsert.servings = nutrition.servings;
+      if (nutrition.kcal !== undefined) dishInsert.kcal_per_serving = nutrition.kcal;
+      if (nutrition.protein !== undefined) dishInsert.protein_per_serving = nutrition.protein;
+      if (nutrition.carbs !== undefined) dishInsert.carbs_per_serving = nutrition.carbs;
+      if (nutrition.fat !== undefined) dishInsert.fat_per_serving = nutrition.fat;
       const { data: d, error } = await supabase
         .from("dishes")
-        .insert({ name: r.name })
+        .insert(dishInsert)
         .select()
         .single();
       if (error || !d) continue;
       dishCount++;
-      const parsed = r.lines
+      const parsed = remaining
         .map((l) => parseIngredientLine(l))
         .filter((p): p is NonNullable<typeof p> => p !== null);
       if (parsed.length > 0) {
