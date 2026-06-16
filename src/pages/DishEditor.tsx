@@ -82,6 +82,7 @@ export default function DishEditor({ dishId, categories, onClose }: Props) {
       if (nutrition.protein !== undefined) patch.protein_per_serving = nutrition.protein;
       if (nutrition.carbs !== undefined) patch.carbs_per_serving = nutrition.carbs;
       if (nutrition.fat !== undefined) patch.fat_per_serving = nutrition.fat;
+      if (nutrition.servings !== undefined) patch.servings = nutrition.servings;
       await saveDishField(patch);
     }
     const n = await addLines(remaining.join("\n"));

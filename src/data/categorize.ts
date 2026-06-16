@@ -166,10 +166,12 @@ export type NutritionValues = {
   protein?: number;
   carbs?: number;
   fat?: number;
+  servings?: number;
 };
 
-// Erkennt Nährwert-Zeilen in Bulk-Listen (z. B. "kcal: 450", "p: 32", "k: 20", "f: 15").
-// Gibt gefundene Werte zurück und die verbleibenden Zeilen ohne Nährwert-Zeilen.
+// Erkennt Nährwert- und Portionszeilen in Bulk-Listen.
+// Formate: "kcal: 450", "p: 32", "k: 20", "f: 15", "portionen: 4"
+// Gibt gefundene Werte zurück und die verbleibenden Zeilen ohne diese Sonderzeilen.
 export function extractNutritionFromLines(lines: string[]): {
   nutrition: NutritionValues;
   remaining: string[];
@@ -184,10 +186,14 @@ export function extractNutritionFromLines(lines: string[]): {
     const p = t.match(/^p\s*:\s*(\d+(?:[.,]\d+)?)(?:\s*g)?$/);
     const k = t.match(/^k\s*:\s*(\d+(?:[.,]\d+)?)(?:\s*g)?$/);
     const f = t.match(/^f\s*:\s*(\d+(?:[.,]\d+)?)(?:\s*g)?$/);
+    const s =
+      t.match(/^portionen\s*:\s*(\d+)$/) ||
+      t.match(/^portion\s*:\s*(\d+)$/);
     if (m) { nutrition.kcal = Number(m[1].replace(",", ".")); }
     else if (p) { nutrition.protein = Number(p[1].replace(",", ".")); }
     else if (k) { nutrition.carbs = Number(k[1].replace(",", ".")); }
     else if (f) { nutrition.fat = Number(f[1].replace(",", ".")); }
+    else if (s) { nutrition.servings = Number(s[1]); }
     else { remaining.push(line); }
   }
   return { nutrition, remaining };
