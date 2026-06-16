@@ -79,6 +79,16 @@ export default function Laundry() {
     setTimers(map);
   }
 
+  // Wenn Permission bereits erteilt, Subscription beim Start sicherstellen
+  useEffect(() => {
+    if (perm === "granted") {
+      navigator.serviceWorker?.ready
+        .then((reg) => subscribeToPush(reg))
+        .catch(console.error);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perm]);
+
   useEffect(() => {
     reload();
     const ch = supabase
