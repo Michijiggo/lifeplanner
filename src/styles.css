@@ -354,14 +354,22 @@ textarea {
 
 /* ---------- Kategorie-Gruppen & Items ---------- */
 .cat-group {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
 }
 .cat-title {
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  margin: 0 0 8px 4px;
+  font-weight: 700;
+  margin: 0;
+  padding: 9px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -372,9 +380,6 @@ textarea {
   margin: 0;
   padding: 0;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
 }
 .item {
   display: flex;
@@ -1138,6 +1143,25 @@ textarea {
   opacity: 0.3;
 }
 
+/* ---------- Icon-Buttons (edit/del in fc-item) ---------- */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.edit-btn {
+  background: #eaf7ee;
+}
+.del-btn {
+  background: #f6eceb;
+}
+
 /* ---------- Finanzen ---------- */
 .fc-form {
   padding: 14px;
@@ -1236,34 +1260,52 @@ textarea {
   color: var(--green-dark);
 }
 .fc-list {
-  padding: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .fc-item {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.fc-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fc-item-bottom {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
-  gap: 10px;
-}
-.fc-item:last-child {
-  border-bottom: none;
-}
-.fc-item-main {
-  flex: 1;
-  min-width: 0;
+  gap: 8px;
 }
 .fc-item-name {
-  display: block;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-item-amount {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text);
+  flex-shrink: 0;
 }
 .fc-item-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
+  flex: 1;
 }
 .fc-badge {
   font-size: 12px;
@@ -1273,20 +1315,10 @@ textarea {
   border-radius: 6px;
   padding: 2px 7px;
 }
-.fc-item-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.fc-item-amount {
-  font-size: 16px;
-  font-weight: 700;
-  white-space: nowrap;
-}
 .fc-item-btns {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 .fc-total-bar {
   display: flex;
@@ -1303,6 +1335,33 @@ textarea {
 .fc-total-amount {
   font-size: 20px;
   font-weight: 700;
+}
+
+/* ---------- FAB ---------- */
+.fab {
+  position: fixed;
+  bottom: calc(74px + var(--safe-bottom));
+  right: max(18px, calc(50vw - 282px));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
+  z-index: 10;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- Sheet-Formular ---------- */
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ---------- Rechner ---------- */

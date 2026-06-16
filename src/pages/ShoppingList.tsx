@@ -14,6 +14,10 @@ export default function ShoppingList() {
   const [newCat, setNewCat] = useState<number>(UNCATEGORIZED);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showSort, setShowSort] = useState(false);
+  const [showAddSheet, setShowAddSheet] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Erstes Laden
   useEffect(() => {
@@ -80,6 +84,19 @@ export default function ShoppingList() {
     });
   }, [open, catMap]);
 
+  function openAddSheet() {
+    setNewName("");
+    setNewQty("");
+    setNewUnit("");
+    setNewCat(UNCATEGORIZED);
+    setBulkText("");
+    setShowAddSheet(true);
+  }
+
+  function closeAddSheet() {
+    setShowAddSheet(false);
+  }
+
   async function addItem(e: React.FormEvent) {
     e.preventDefault();
     const name = newName.trim();
@@ -111,6 +128,7 @@ export default function ShoppingList() {
     setNewQty("");
     setNewUnit("");
     setNewCat(UNCATEGORIZED);
+    setShowAddSheet(false);
     const { error } = await supabase.from("shopping_items").insert({
       id: optimistic.id,
       name: optimistic.name,
@@ -119,8 +137,50 @@ export default function ShoppingList() {
       category_id: optimistic.category_id,
     });
     if (error) {
-      // Rollback bei Fehler
       setItems((prev) => prev.filter((i) => i.id !== optimistic.id));
+      alert("Konnte nicht gespeichert werden: " + error.message);
+    }
+  }
+
+  async function addBulkItems() {
+    const lines = bulkText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (!lines.length) return;
+
+    const optimisticItems: ShoppingItem[] = lines.map((line) => {
+      const parsed = parseIngredientLine(line);
+      return {
+        id: crypto.randomUUID(),
+        name: parsed?.name || line,
+        quantity: parsed?.quantity ?? null,
+        unit: parsed?.unit || null,
+        category_id: parsed?.category_id ?? UNCATEGORIZED,
+        checked: false,
+        checked_at: null,
+        source_dish_id: null,
+        created_at: new Date().toISOString(),
+      };
+    });
+
+    setItems((prev) => [...prev, ...optimisticItems]);
+    setBulkText("");
+    setShowAddSheet(false);
+
+    const { error } = await supabase.from("shopping_items").insert(
+      optimisticItems.map((i) => ({
+        id: i.id,
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        category_id: i.category_id,
+      }))
+    );
+    if (error) {
+      setItems((prev) =>
+        prev.filter((i) => !optimisticItems.some((o) => o.id === i.id))
+      );
       alert("Konnte nicht gespeichert werden: " + error.message);
     }
   }
@@ -163,40 +223,6 @@ export default function ShoppingList() {
 
   return (
     <div className="page">
-      <form className="add-bar" onSubmit={addItem}>
-        <input
-          className="add-name"
-          placeholder="Artikel hinzufügen…"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
-        <div className="add-meta">
-          <input
-            className="add-qty"
-            placeholder="Menge"
-            inputMode="decimal"
-            value={newQty}
-            onChange={(e) => setNewQty(e.target.value)}
-          />
-          <input
-            className="add-unit"
-            placeholder="Einheit"
-            value={newUnit}
-            onChange={(e) => setNewUnit(e.target.value)}
-          />
-          <select value={newCat} onChange={(e) => setNewCat(Number(e.target.value))}>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.emoji} {c.name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="add-btn">
-            +
-          </button>
-        </div>
-      </form>
-
       <button className="sort-cats-btn" onClick={() => setShowSort(true)}>
         ↕ Kategorien sortieren
       </button>
@@ -210,7 +236,7 @@ export default function ShoppingList() {
           <div className="empty-emoji">🧺</div>
           <p>Deine Einkaufsliste ist leer.</p>
           <p className="empty-hint">
-            Füge oben Artikel hinzu oder schiebe Zutaten aus deinen Gerichten hierher.
+            Tippe auf + um Artikel hinzuzufügen.
           </p>
         </div>
       )}
@@ -337,6 +363,112 @@ export default function ShoppingList() {
           </ul>
         </section>
       )}
+
+      {/* FAB */}
+      <button className="fab" onClick={openAddSheet} aria-label="Artikel hinzufügen">
+        +
+      </button>
+
+      {/* Hinzufügen-Sheet */}
+      {showAddSheet &&
+        createPortal(
+          <div className="sheet-backdrop" onClick={closeAddSheet}>
+            <div className="sheet" onClick={(e) => e.stopPropagation()}>
+              <h3>Artikel hinzufügen</h3>
+
+              {/* Modus-Toggle */}
+              <div className="fc-person-tabs" style={{ marginBottom: 14 }}>
+                <button
+                  className={`fc-person-tab ${!bulkMode ? "active" : ""}`}
+                  onClick={() => setBulkMode(false)}
+                >
+                  Einzeln
+                </button>
+                <button
+                  className={`fc-person-tab ${bulkMode ? "active" : ""}`}
+                  onClick={() => setBulkMode(true)}
+                >
+                  Mehrere
+                </button>
+              </div>
+
+              {bulkMode ? (
+                <div className="sheet-form">
+                  <p className="empty-hint" style={{ margin: "0 0 8px", textAlign: "left" }}>
+                    Einen Artikel pro Zeile, z.B. „500 g Mehl"
+                  </p>
+                  <textarea
+                    autoFocus
+                    className="bulk-text"
+                    placeholder={"Milch\n2 kg Äpfel\n500 g Mehl"}
+                    value={bulkText}
+                    onChange={(e) => setBulkText(e.target.value)}
+                    rows={6}
+                  />
+                  <div className="fc-actions">
+                    <button className="fc-cancel-btn" onClick={closeAddSheet}>
+                      Abbrechen
+                    </button>
+                    <button
+                      className="fc-save-btn"
+                      onClick={addBulkItems}
+                      disabled={!bulkText.trim()}
+                    >
+                      Alle hinzufügen
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form className="sheet-form" onSubmit={addItem}>
+                  <input
+                    ref={nameInputRef}
+                    autoFocus
+                    className="fc-input"
+                    placeholder="Artikel, z.B. 500 g Mehl"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                  />
+                  <div className="fc-row">
+                    <input
+                      className="fc-input fc-amount"
+                      placeholder="Menge"
+                      inputMode="decimal"
+                      value={newQty}
+                      onChange={(e) => setNewQty(e.target.value)}
+                    />
+                    <input
+                      className="fc-input fc-account"
+                      placeholder="Einheit"
+                      value={newUnit}
+                      onChange={(e) => setNewUnit(e.target.value)}
+                    />
+                  </div>
+                  <select
+                    className="fc-input"
+                    value={newCat}
+                    onChange={(e) => setNewCat(Number(e.target.value))}
+                    style={{ color: newCat === UNCATEGORIZED ? "var(--muted)" : "inherit" }}
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.emoji} {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="fc-actions">
+                    <button type="button" className="fc-cancel-btn" onClick={closeAddSheet}>
+                      Abbrechen
+                    </button>
+                    <button type="submit" className="fc-save-btn">
+                      Hinzufügen
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
@@ -385,12 +517,17 @@ function CategorySortSheet({
   }, []);
 
   async function persist(arr: Category[]) {
-    await Promise.all(
+    const results = await Promise.all(
       arr.map((c, idx) =>
         supabase.from("categories").update({ sort_order: (idx + 1) * 10 }).eq("id", c.id)
       )
     );
-    reloadCategories();
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      alert("Sortierung konnte nicht gespeichert werden: " + failed.error.message);
+      return;
+    }
+    await reloadCategories();
   }
 
   function move(i: number, dir: -1 | 1) {

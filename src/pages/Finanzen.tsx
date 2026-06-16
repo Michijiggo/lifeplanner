@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import type { FixedCost } from "../lib/types";
 
@@ -18,7 +19,7 @@ export default function Finanzen() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const nameRef = useRef<HTMLInputElement>(null);
+  const [showSheet, setShowSheet] = useState(false);
 
   useEffect(() => {
     supabase
@@ -75,7 +76,13 @@ export default function Finanzen() {
       if (data) setCosts((prev) => [...prev, data as FixedCost]);
     }
     setForm(emptyForm);
-    nameRef.current?.focus();
+    setShowSheet(false);
+  }
+
+  function openNew() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowSheet(true);
   }
 
   function startEdit(c: FixedCost) {
@@ -87,12 +94,13 @@ export default function Finanzen() {
       debit_day: c.debit_day != null ? String(c.debit_day) : "",
       account: c.account ?? "",
     });
-    nameRef.current?.focus();
+    setShowSheet(true);
   }
 
-  function cancelEdit() {
+  function closeSheet() {
     setEditingId(null);
     setForm(emptyForm);
+    setShowSheet(false);
   }
 
   async function remove(id: string) {
@@ -102,73 +110,6 @@ export default function Finanzen() {
 
   return (
     <div className="page">
-      {/* Eingabeformular */}
-      <div className="fc-form card">
-        {editingId && (
-          <div className="fc-edit-hint">Eintrag bearbeiten</div>
-        )}
-
-        {/* Personen-Auswahl (nur bei neuem Eintrag) */}
-        {!editingId && (
-          <div className="fc-person-tabs">
-            {PERSONS.map((p) => (
-              <button
-                key={p}
-                className={`fc-person-tab ${activePerson === p ? "active" : ""}`}
-                onClick={() => setActivePerson(p)}
-              >
-                {PERSON_LABELS[p]}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <input
-          ref={nameRef}
-          className="fc-input"
-          placeholder="Bezeichnung (z.B. Miete)"
-          value={form.name}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          onKeyDown={(e) => e.key === "Enter" && save()}
-        />
-        <div className="fc-row">
-          <input
-            className="fc-input fc-amount"
-            placeholder="Betrag €"
-            inputMode="decimal"
-            value={form.amount}
-            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-            onKeyDown={(e) => e.key === "Enter" && save()}
-          />
-          <input
-            className="fc-input fc-day"
-            placeholder="Tag"
-            inputMode="numeric"
-            maxLength={2}
-            value={form.debit_day}
-            onChange={(e) => setForm((f) => ({ ...f, debit_day: e.target.value }))}
-            onKeyDown={(e) => e.key === "Enter" && save()}
-          />
-          <input
-            className="fc-input fc-account"
-            placeholder="Konto"
-            value={form.account}
-            onChange={(e) => setForm((f) => ({ ...f, account: e.target.value }))}
-            onKeyDown={(e) => e.key === "Enter" && save()}
-          />
-        </div>
-        <div className="fc-actions">
-          {editingId && (
-            <button className="fc-cancel-btn" onClick={cancelEdit}>
-              Abbrechen
-            </button>
-          )}
-          <button className="fc-save-btn" onClick={save}>
-            {editingId ? "Speichern" : "➕ Hinzufügen"}
-          </button>
-        </div>
-      </div>
-
       {loading && <p className="empty-hint">Laden…</p>}
 
       {/* Pro Person */}
@@ -182,11 +123,14 @@ export default function Finanzen() {
           {forPerson(p).length === 0 ? (
             <p className="empty-hint">Noch keine Fixkosten</p>
           ) : (
-            <div className="card fc-list">
+            <div className="fc-list">
               {forPerson(p).map((c) => (
-                <div key={c.id} className="fc-item">
-                  <div className="fc-item-main">
+                <div key={c.id} className="fc-item card">
+                  <div className="fc-item-top">
                     <span className="fc-item-name">{c.name}</span>
+                    <span className="fc-item-amount">{fmt(Number(c.amount))} €</span>
+                  </div>
+                  <div className="fc-item-bottom">
                     <div className="fc-item-meta">
                       {c.debit_day != null && (
                         <span className="fc-badge">📅 {c.debit_day}.</span>
@@ -195,9 +139,6 @@ export default function Finanzen() {
                         <span className="fc-badge">🏦 {c.account}</span>
                       )}
                     </div>
-                  </div>
-                  <div className="fc-item-right">
-                    <span className="fc-item-amount">{fmt(Number(c.amount))} €</span>
                     <div className="fc-item-btns">
                       <button
                         className="icon-btn edit-btn"
@@ -229,6 +170,82 @@ export default function Finanzen() {
           <span className="fc-total-amount">{fmt(totalAll())} €</span>
         </div>
       )}
+
+      {/* FAB */}
+      <button className="fab" onClick={openNew} aria-label="Neue Fixkosten">
+        +
+      </button>
+
+      {/* Eingabe-Sheet */}
+      {showSheet &&
+        createPortal(
+          <div className="sheet-backdrop" onClick={closeSheet}>
+            <div className="sheet" onClick={(e) => e.stopPropagation()}>
+              <h3>{editingId ? "Eintrag bearbeiten" : "Neue Fixkosten"}</h3>
+
+              {/* Personen-Auswahl (nur bei neuem Eintrag) */}
+              {!editingId && (
+                <div className="fc-person-tabs" style={{ marginBottom: 10 }}>
+                  {PERSONS.map((p) => (
+                    <button
+                      key={p}
+                      className={`fc-person-tab ${activePerson === p ? "active" : ""}`}
+                      onClick={() => setActivePerson(p)}
+                    >
+                      {PERSON_LABELS[p]}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="sheet-form">
+                <input
+                  autoFocus
+                  className="fc-input"
+                  placeholder="Bezeichnung (z.B. Miete)"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onKeyDown={(e) => e.key === "Enter" && save()}
+                />
+                <div className="fc-row">
+                  <input
+                    className="fc-input fc-amount"
+                    placeholder="Betrag €"
+                    inputMode="decimal"
+                    value={form.amount}
+                    onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && save()}
+                  />
+                  <input
+                    className="fc-input fc-day"
+                    placeholder="Tag"
+                    inputMode="numeric"
+                    maxLength={2}
+                    value={form.debit_day}
+                    onChange={(e) => setForm((f) => ({ ...f, debit_day: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && save()}
+                  />
+                  <input
+                    className="fc-input fc-account"
+                    placeholder="Konto"
+                    value={form.account}
+                    onChange={(e) => setForm((f) => ({ ...f, account: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && save()}
+                  />
+                </div>
+                <div className="fc-actions">
+                  <button className="fc-cancel-btn" onClick={closeSheet}>
+                    Abbrechen
+                  </button>
+                  <button className="fc-save-btn" onClick={save}>
+                    {editingId ? "Speichern" : "Hinzufügen"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
