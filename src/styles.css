@@ -591,6 +591,49 @@ textarea {
   margin: 0 0 8px 2px;
 }
 
+/* ---------- Nährwerte (Editor) ---------- */
+.nutrition-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.nutrition-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nutrition-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nutrition-input-wrap {
+  position: relative;
+}
+.nutrition-input-wrap input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 26px 8px 8px;
+  font-size: 15px;
+  min-width: 0;
+}
+.nutrition-unit {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
 /* ---------- Zutaten-Eingabe (Editor) ---------- */
 .quick-add {
   display: flex;
@@ -631,6 +674,7 @@ textarea {
   gap: 8px;
   align-items: center;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 .add-btn-wide {
   flex: 1;
@@ -844,6 +888,11 @@ textarea {
   border: none;
   color: var(--muted);
   width: 100%;
+}
+.bulk-actions .sheet-close {
+  width: auto;
+  margin-top: 0;
+  flex-shrink: 0;
 }
 
 /* ---------- Vorrats-Abfrage ---------- */

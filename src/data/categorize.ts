@@ -161,6 +161,38 @@ export function parseIngredientLine(raw: string): ParsedIngredient | null {
   return { name, quantity, unit, category_id: detectCategory(name) };
 }
 
+export type NutritionValues = {
+  kcal?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+};
+
+// Erkennt Nährwert-Zeilen in Bulk-Listen (z. B. "kcal: 450", "p: 32", "k: 20", "f: 15").
+// Gibt gefundene Werte zurück und die verbleibenden Zeilen ohne Nährwert-Zeilen.
+export function extractNutritionFromLines(lines: string[]): {
+  nutrition: NutritionValues;
+  remaining: string[];
+} {
+  const nutrition: NutritionValues = {};
+  const remaining: string[] = [];
+  for (const line of lines) {
+    const t = line.trim().toLowerCase();
+    const m =
+      t.match(/^kcal\s*:\s*(\d+(?:[.,]\d+)?)$/) ||
+      t.match(/^kalorien\s*:\s*(\d+(?:[.,]\d+)?)$/);
+    const p = t.match(/^p\s*:\s*(\d+(?:[.,]\d+)?)(?:\s*g)?$/);
+    const k = t.match(/^k\s*:\s*(\d+(?:[.,]\d+)?)(?:\s*g)?$/);
+    const f = t.match(/^f\s*:\s*(\d+(?:[.,]\d+)?)(?:\s*g)?$/);
+    if (m) { nutrition.kcal = Number(m[1].replace(",", ".")); }
+    else if (p) { nutrition.protein = Number(p[1].replace(",", ".")); }
+    else if (k) { nutrition.carbs = Number(k[1].replace(",", ".")); }
+    else if (f) { nutrition.fat = Number(f[1].replace(",", ".")); }
+    else { remaining.push(line); }
+  }
+  return { nutrition, remaining };
+}
+
 export type ParsedRecipe = { name: string; lines: string[] };
 
 // Zerlegt einen Block mit mehreren Rezepten. Überschriften beginnen mit

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { UNCATEGORIZED, type Category, type Dish, type DishIngredient } from "../lib/types";
-import { parseIngredientLine } from "../data/categorize";
+import { extractNutritionFromLines, parseIngredientLine } from "../data/categorize";
 import { useShopping } from "../shopping/ShoppingProvider";
 
 type Props = {
@@ -73,8 +73,19 @@ export default function DishEditor({ dishId, categories, onClose }: Props) {
   }
 
   async function addBulk() {
-    const n = await addLines(bulk);
-    if (n > 0) {
+    const rawLines = bulk.split("\n");
+    const { nutrition, remaining } = extractNutritionFromLines(rawLines);
+    const hasNutrition = Object.keys(nutrition).length > 0;
+    if (hasNutrition) {
+      const patch: Partial<Dish> = {};
+      if (nutrition.kcal !== undefined) patch.kcal_per_serving = nutrition.kcal;
+      if (nutrition.protein !== undefined) patch.protein_per_serving = nutrition.protein;
+      if (nutrition.carbs !== undefined) patch.carbs_per_serving = nutrition.carbs;
+      if (nutrition.fat !== undefined) patch.fat_per_serving = nutrition.fat;
+      await saveDishField(patch);
+    }
+    const n = await addLines(remaining.join("\n"));
+    if (n > 0 || hasNutrition) {
       setBulk("");
       setShowBulk(false);
     }
@@ -164,6 +175,38 @@ export default function DishEditor({ dishId, categories, onClose }: Props) {
         onChange={(e) => setDish({ ...dish, notes: e.target.value })}
         onBlur={(e) => saveDishField({ notes: e.target.value || null })}
       />
+
+      <h3 className="section-title">Nährwerte pro Portion (optional)</h3>
+      <div className="nutrition-row">
+        {(
+          [
+            { key: "kcal_per_serving", label: "kcal", unit: "kcal" },
+            { key: "protein_per_serving", label: "Protein", unit: "g" },
+            { key: "carbs_per_serving", label: "Kohlenhydrate", unit: "g" },
+            { key: "fat_per_serving", label: "Fett", unit: "g" },
+          ] as { key: keyof Dish; label: string; unit: string }[]
+        ).map(({ key, label, unit }) => (
+          <label key={key} className="nutrition-field">
+            <span className="nutrition-label">{label}</span>
+            <div className="nutrition-input-wrap">
+              <input
+                type="number"
+                min={0}
+                step="any"
+                placeholder="–"
+                value={(dish[key] as number | null) ?? ""}
+                onChange={(e) =>
+                  setDish({ ...dish, [key]: e.target.value === "" ? null : Number(e.target.value) })
+                }
+                onBlur={(e) =>
+                  saveDishField({ [key]: e.target.value === "" ? null : Number(e.target.value) })
+                }
+              />
+              <span className="nutrition-unit">{unit}</span>
+            </div>
+          </label>
+        ))}
+      </div>
 
       <h3 className="section-title">Zutaten</h3>
 

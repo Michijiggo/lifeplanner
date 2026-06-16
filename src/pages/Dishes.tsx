@@ -175,7 +175,12 @@ export default function Dishes() {
             </button>
             <div className="dish-info" onClick={() => setOpenId(d.id)}>
               <div className="dish-name">{d.name}</div>
-              <div className="dish-meta">{d.servings} Portionen</div>
+              <div className="dish-meta">
+                {d.servings} Portionen
+                {d.kcal_per_serving != null && (
+                  <span> · {d.kcal_per_serving} kcal</span>
+                )}
+              </div>
             </div>
             <button className="dish-add" onClick={() => addToList(d)}>
               + Liste

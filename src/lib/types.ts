@@ -23,6 +23,10 @@ export type Dish = {
   notes: string | null;
   servings: number;
   is_favorite: boolean;
+  kcal_per_serving: number | null;
+  protein_per_serving: number | null;
+  carbs_per_serving: number | null;
+  fat_per_serving: number | null;
   created_at: string;
   updated_at: string;
 };
