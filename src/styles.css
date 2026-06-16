@@ -1305,6 +1305,33 @@ textarea {
   font-weight: 700;
 }
 
+/* ---------- FAB ---------- */
+.fab {
+  position: fixed;
+  bottom: calc(74px + var(--safe-bottom));
+  right: max(18px, calc(50vw - 282px));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
+  z-index: 10;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- Sheet-Formular ---------- */
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* ---------- Rechner ---------- */
 .rc-section {
   padding: 16px;
