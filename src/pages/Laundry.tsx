@@ -2,6 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { LaundryKind, LaundryTimer } from "../lib/types";
 
+const VAPID_PUBLIC_KEY =
+  "BKcK9Jwuu8ufy9GxcGBJ3nfCtiUTDzehZitMvBKi2Vrzc5Y-hU5AHfXoh_HVsF0DRnSWWUfxIKkSRK3bH9mqL_8";
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
 const MACHINES: {
   kind: LaundryKind;
   label: string;
@@ -113,6 +123,23 @@ export default function Laundry() {
     }
   }, [now, timers]);
 
+  async function subscribeToPush(reg: ServiceWorkerRegistration) {
+    try {
+      const existing = await reg.pushManager.getSubscription();
+      const sub = existing ?? await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("push_subscriptions").upsert(
+        { subscription: sub.toJSON(), user_id: user?.id },
+        { onConflict: "user_id" }
+      );
+    } catch (e) {
+      console.error("Push-Registrierung fehlgeschlagen:", e);
+    }
+  }
+
   async function enableNotifications() {
     if (typeof Notification === "undefined") {
       alert("Dieser Browser unterstützt keine Benachrichtigungen.");
@@ -120,6 +147,10 @@ export default function Laundry() {
     }
     const p = await Notification.requestPermission();
     setPerm(p);
+    if (p === "granted") {
+      const reg = await navigator.serviceWorker?.ready;
+      if (reg) await subscribeToPush(reg);
+    }
   }
 
   async function start(kind: LaundryKind, minutes: number) {
@@ -220,9 +251,8 @@ export default function Laundry() {
       })}
 
       <p className="empty-hint" style={{ textAlign: "left" }}>
-        Tipp: Die Benachrichtigung erscheint, sobald du die App öffnest und der Timer
-        abgelaufen ist. Echte Hintergrund-Push (App vollständig geschlossen) braucht
-        einen Server-Push – das kommt in einem späteren Update.
+        Tipp: Aktiviere Benachrichtigungen und füge die App zum Home-Bildschirm hinzu.
+        Du bekommst dann auch dann eine Push-Nachricht, wenn die App komplett geschlossen ist.
       </p>
     </div>
   );
