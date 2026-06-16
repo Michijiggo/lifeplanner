@@ -895,6 +895,43 @@ textarea {
   flex-shrink: 0;
 }
 
+/* ---------- Gericht-Picker (Multi-Select) ---------- */
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 16px;
+}
+.picker-row.on {
+  background: #eaf7ee;
+  border-color: var(--green);
+}
+.picker-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--green-dark);
+  flex-shrink: 0;
+}
+.picker-row.on .picker-check {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.picker-name {
+  flex: 1;
+}
+
 /* ---------- Vorrats-Abfrage ---------- */
 .staple-row {
   display: flex;

@@ -118,6 +118,8 @@ function DishListDetail({
   const [members, setMembers] = useState<Dish[]>([]);
   const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [picker, setPicker] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pickerSearch, setPickerSearch] = useState("");
   const [openDishId, setOpenDishId] = useState<string | null>(null);
   const categories = useCategories();
   const { addToShopping } = useShopping();
@@ -139,15 +141,21 @@ function DishListDetail({
     reload();
   }, [listId]);
 
-  async function addDish(dishId: string) {
-    setPicker(false);
-    const { error } = await supabase
-      .from("dish_list_items")
-      .insert({ list_id: listId, dish_id: dishId });
+  function openPicker() {
+    setSelected(new Set());
+    setPickerSearch("");
+    setPicker(true);
+  }
+
+  async function addSelected() {
+    if (selected.size === 0) return;
+    const rows = Array.from(selected).map((dishId) => ({ list_id: listId, dish_id: dishId }));
+    const { error } = await supabase.from("dish_list_items").insert(rows);
     if (error && !/duplicate/i.test(error.message)) {
       alert(error.message);
       return;
     }
+    setPicker(false);
     reload();
   }
 
@@ -218,6 +226,9 @@ function DishListDetail({
 
   const memberIds = new Set(members.map((d) => d.id));
   const addable = allDishes.filter((d) => !memberIds.has(d.id));
+  const filtered = pickerSearch.trim()
+    ? addable.filter((d) => d.name.toLowerCase().includes(pickerSearch.trim().toLowerCase()))
+    : addable;
 
   return (
     <div className="page editor">
@@ -261,8 +272,8 @@ function DishListDetail({
         ))}
       </ul>
 
-      <button className="bulk-toggle" onClick={() => setPicker(true)} style={{ marginTop: 12 }}>
-        + Gericht hinzufügen
+      <button className="bulk-toggle" onClick={openPicker} style={{ marginTop: 12 }}>
+        + Gerichte hinzufügen
       </button>
 
       <button className="big-btn" onClick={addAllToShopping} disabled={members.length === 0}>
@@ -272,21 +283,56 @@ function DishListDetail({
       {picker && (
         <div className="sheet-backdrop" onClick={() => setPicker(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h3>Gericht hinzufügen</h3>
-            {addable.length === 0 && (
+            <h3>Gerichte auswählen</h3>
+            <input
+              className="search"
+              placeholder="Suchen…"
+              value={pickerSearch}
+              onChange={(e) => setPickerSearch(e.target.value)}
+              style={{ marginBottom: 10 }}
+              autoFocus
+            />
+            {addable.length === 0 ? (
               <p className="empty-hint">Alle Gerichte sind schon in der Liste.</p>
-            )}
+            ) : filtered.length === 0 ? (
+              <p className="empty-hint">Keine Gerichte gefunden.</p>
+            ) : null}
             <div className="sheet-list">
-              {addable.map((d) => (
-                <button key={d.id} className="sheet-item" onClick={() => addDish(d.id)}>
-                  {d.is_favorite ? "★ " : ""}
-                  {d.name}
-                </button>
-              ))}
+              {filtered.map((d) => {
+                const on = selected.has(d.id);
+                return (
+                  <button
+                    key={d.id}
+                    className={`picker-row ${on ? "on" : ""}`}
+                    onClick={() =>
+                      setSelected((prev) => {
+                        const next = new Set(prev);
+                        on ? next.delete(d.id) : next.add(d.id);
+                        return next;
+                      })
+                    }
+                  >
+                    <span className="picker-check">{on ? "✓" : ""}</span>
+                    <span className="picker-name">
+                      {d.is_favorite ? "★ " : ""}
+                      {d.name}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <button className="sheet-close" onClick={() => setPicker(false)}>
-              Abbrechen
-            </button>
+            <div className="bulk-actions">
+              <button className="sheet-close" onClick={() => setPicker(false)}>
+                Abbrechen
+              </button>
+              <button
+                className="add-btn-wide"
+                onClick={addSelected}
+                disabled={selected.size === 0}
+              >
+                {selected.size > 0 ? `${selected.size} hinzufügen` : "Auswählen"}
+              </button>
+            </div>
           </div>
         </div>
       )}
