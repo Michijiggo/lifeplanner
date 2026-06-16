@@ -1266,26 +1266,44 @@ textarea {
 }
 .fc-item {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-left: 3px solid var(--green);
+}
+.fc-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fc-item-bottom {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px;
-  gap: 10px;
-  min-height: 64px;
-}
-.fc-item-main {
-  flex: 1;
-  min-width: 0;
+  gap: 8px;
 }
 .fc-item-name {
-  display: block;
   font-size: 17px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-item-amount {
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--green-dark);
+  flex-shrink: 0;
 }
 .fc-item-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
+  flex: 1;
 }
 .fc-badge {
   font-size: 12px;
@@ -1295,21 +1313,10 @@ textarea {
   border-radius: 6px;
   padding: 2px 7px;
 }
-.fc-item-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.fc-item-amount {
-  font-size: 17px;
-  font-weight: 700;
-  white-space: nowrap;
-  color: var(--text);
-}
 .fc-item-btns {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 .fc-total-bar {
   display: flex;

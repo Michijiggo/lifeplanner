@@ -126,8 +126,11 @@ export default function Finanzen() {
             <div className="fc-list">
               {forPerson(p).map((c) => (
                 <div key={c.id} className="fc-item card">
-                  <div className="fc-item-main">
+                  <div className="fc-item-top">
                     <span className="fc-item-name">{c.name}</span>
+                    <span className="fc-item-amount">{fmt(Number(c.amount))} €</span>
+                  </div>
+                  <div className="fc-item-bottom">
                     <div className="fc-item-meta">
                       {c.debit_day != null && (
                         <span className="fc-badge">📅 {c.debit_day}.</span>
@@ -136,9 +139,6 @@ export default function Finanzen() {
                         <span className="fc-badge">🏦 {c.account}</span>
                       )}
                     </div>
-                  </div>
-                  <div className="fc-item-right">
-                    <span className="fc-item-amount">{fmt(Number(c.amount))} €</span>
                     <div className="fc-item-btns">
                       <button
                         className="icon-btn edit-btn"
